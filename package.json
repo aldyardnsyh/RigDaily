@@ -1,0 +1,35 @@
+{
+  "name": "rimbase-rebuild",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@rigdaily/web",
+    "build": "npm run build --workspace=@rigdaily/web",
+    "start": "npm run start --workspace=@rigdaily/web",
+    "db:migrate": "npm run db:migrate --workspace=@rigdaily/database",
+    "db:seed": "npm run db:seed --workspace=@rigdaily/database",
+    "db:seed:variants": "npx tsx packages/database/src/seed-variants.ts",
+    "db:reset": "npm run db:reset --workspace=@rigdaily/database",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p packages/shared/tsconfig.json --noEmit && tsc -p apps/web/tsconfig.json --noEmit",
+    "pg:up": "docker compose -f infra/docker/compose.dev.yml up -d",
+    "pg:down": "docker compose -f infra/docker/compose.dev.yml down",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "audit:text": "node scripts/audit-text-quality.mjs",
+    "audit:text:fix": "node scripts/audit-text-quality.mjs --fix",
+    "verify": "npm run typecheck && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "20.12.0",
+    "tsx": "^4.19.0",
+    "typescript": "5.5.4",
+    "vitest": "^2.1.1"
+  }
+}

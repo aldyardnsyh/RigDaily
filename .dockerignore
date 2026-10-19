@@ -1,0 +1,73 @@
+# ============================================================================
+# .dockerignore — rampingkan build context (build di LAPTOP/CI, kirim image ke VPS)
+#
+# Aturan praktis: JANGAN kirim node_modules/.next/.git/data apa pun ke build
+# context. Selain memperlambat, node_modules lokal (Windows/macOS) bisa
+# menimpa hasil `npm ci` Linux dan merusak image.
+# ============================================================================
+
+# --- Dependency & artefak build -------------------------------------------
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+dist-server
+**/dist
+**/dist-server
+*.tsbuildinfo
+**/*.tsbuildinfo
+npm-debug.log*
+**/.turbo
+
+# --- Data lokal (database WASM dev / dump / backup) -----------------------
+.pglite-data
+**/.pglite-data
+*.dump
+*.sql.gz
+*.tar.gz
+backups
+artifacts
+**/artifacts
+
+# --- Version control & editor --------------------------------------------
+.git
+.gitignore
+.gitattributes
+.github
+.vscode
+.idea
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Aplikasi yang TIDAK ikut image server ---------------------------------
+# Desktop (Electron) tidak dibutuhkan di VPS.
+apps/desktop
+# Test & konfig test.
+tests
+vitest.config.ts
+**/*.test.ts
+**/*.spec.ts
+
+# --- Tooling agent / hasil generator --------------------------------------
+graphify-out
+**/graphify-out
+*.mjs
+
+# --- Dokumentasi & lampiran (kecuali entrypoint di infra tetap dibutuhkan) --
+*.md
+docs
+!docs/deploy/**
+lampiran
+**/lampiran
+*.pdf
+!apps/web/public/**/*.pdf
+
+# --- Environment & rahasia (JANGAN pernah masuk image) ---------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets

@@ -1,0 +1,64 @@
+{
+  // tsconfig.server.json — MILIK AGENT DEVOPS.
+  //
+  // Tujuan: mengompilasi paket SERVER-ONLY (database + shared) ke `dist-server/`
+  // sebagai CommonJS biasa, supaya script migrasi/seed bisa dijalankan di image
+  // produksi dengan `node dist-server/database/migrate.js` — TANPA tsx, TANPA
+  // esbuild, TANPA dependency baru.
+  //
+  // Kenapa CommonJS + `paths` di-override:
+  //   packages/*/package.json mengekspor `src/index.ts` mentah (TypeScript).
+  //   `paths` HANYA memengaruhi resolusi saat COMPILE, bukan `require()` yang
+  //   di-emit. Kode hasil kompilasi tetap berisi `require("@rigdaily/shared")`.
+  //   Supaya resolve saat RUNTIME, Dockerfile membuat shim:
+  //     dist-server/node_modules/@rigdaily/shared/index.js
+  //   yang me-re-export `dist-server/shared/src` (lihat komentar di Dockerfile).
+  //   Node menemukan shim itu dengan menaiki folder dari dist-server/database/src.
+  //
+  //   `paths` di bawah tetap berguna agar tsc MEMAKAI source TS paket shared
+  //   (bukan symlink node_modules ke file .ts) dan ikut mengompilasinya.
+  //
+  // Output aktual (karena rootDir=./packages, sumber di packages/<pkg>/src):
+  //   dist-server/database/src/migrate.js
+  //   dist-server/database/src/seed.js
+  //   dist-server/shared/src/index.js
+  //
+  // Dipakai oleh Dockerfile:
+  //   npx tsc -p tsconfig.server.json
+  //
+  // TIDAK dipakai oleh Next.js (Next memakai apps/web/tsconfig.json). File ini
+  // sengaja dipisah supaya root tsconfig (bila nanti ada) tidak terganggu.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "sourceMap": false,
+    "noEmit": false,
+    "noEmitOnError": true,
+    "types": ["node"],
+    // rootDir mengikuti folder `packages/`, jadi output menjadi:
+    //   dist-server/shared/src/...   dan   dist-server/database/src/...
+    "rootDir": "./packages",
+    "outDir": "./dist-server",
+    "baseUrl": ".",
+    // Override ekspor workspace ke source TS (dicompile bersama). Ini hanya
+    // resolusi saat compile; saat runtime dipakai shim node_modules (Dockerfile).
+    "paths": {
+      "@rigdaily/shared": ["./packages/shared/src/index.ts"],
+      "@rigdaily/shared/*": ["./packages/shared/src/*"],
+      "@rigdaily/database": ["./packages/database/src/index.ts"],
+      "@rigdaily/database/*": ["./packages/database/src/*"]
+    }
+  },
+  // Hanya paket yang dibutuhkan script CLI server. `packages/ui` sengaja
+  // TIDAK disertakan (React/TSX, bukan kebutuhan runtime migrasi).
+  "include": ["packages/shared/src/**/*.ts", "packages/database/src/**/*.ts"],
+  "exclude": ["node_modules", "dist-server", "**/*.test.ts"]
+}

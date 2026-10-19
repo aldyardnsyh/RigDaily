@@ -1,0 +1,120 @@
+# ============================================================
+# RigDaily - .gitignore
+#
+# Prinsip: hanya source code, aset, dan dokumentasi publik yang boleh masuk.
+# Semua yang bersifat lokal, rahasia, atau hasil build diabaikan.
+# ============================================================
+
+# --- Dependency ---
+node_modules/
+.pnp/
+.pnp.js
+
+# --- Build output ---
+.next/
+out/
+build/
+dist/
+dist-server/
+*.tsbuildinfo
+next-env.d.ts
+
+# --- Environment & secrets (JANGAN PERNAH COMMIT) ---
+# Berisi kredensial database, password seed, dan kunci API.
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.staging
+# Contoh variabel tanpa nilai rahasia tetap disertakan agar kontributor tahu.
+!.env.example
+
+# --- Database lokal ---
+# Data PGlite/SQLite adalah data operasional, bukan bagian dari source.
+.pglite-data/
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# --- Artefak runtime & hasil uji ---
+artifacts/
+*.log
+logs/
+tmp/
+tmp-*
+*.pid
+test-results/
+playwright-report/
+e2e-report/
+e2e/.auth/
+blob-report/
+.vitest/
+coverage/
+
+# --- Desktop (Electron) ---
+apps/desktop/dist/
+apps/desktop/release/
+apps/desktop/node_modules/
+apps/desktop/out/
+
+# --- Backup bundle & image hasil build ---
+*.json.gz
+backups/
+*.tar.gz
+*.tar
+*.zip
+
+# --- Tooling metadata (hasil analisis lokal) ---
+graphify-out/
+.graphify*
+.eslintcache
+.cache/
+
+# --- OS & editor ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# --- Docker override lokal ---
+docker-compose.override.yml
+
+# ============================================================
+# DOKUMEN INTERNAL DEVELOPER - TIDAK UNTUK PUBLIK
+#
+# File di bawah berisi catatan proses build, kontrak internal antar-modul,
+# backlog audit, dan panduan operasi server. Semuanya dipakai selama
+# pengembangan dan tidak relevan (sebagian malah sensitif) untuk pengguna
+# repositori publik. README.md di root tetap dipublikasikan.
+#
+# Bila ingin menerbitkan sebagian, hapus baris terkait secara sadar.
+# ============================================================
+docs/KONTRAK-FROZEN.md
+docs/BACKLOG-AUDIT.md
+docs/GLOSARIUM-UI.md
+docs/deploy/
+# Screenshot dokumentasi TETAP dipublikasikan (dipakai README).
+!docs/screenshots/
+!docs/screenshots/*.png
+
+# Laporan riset induk (berisi analisis kompetitor dan catatan legal).
+# Folder ini berada di luar repo, tetapi bila tersalin ke dalam, abaikan.
+lampiran/
+00-README-Riset-RIMBase.md
+01-Profil-dan-Klarifikasi-RIMBase.md
+02-Modul-Fitur-dan-Mekanisme-Kerja.md
+03-Tampilan-Workflow-dan-Cara-Sistem-Berjalan.md
+04-Arsitektur-Teknis-dan-Roadmap-Rebuild.md
+05-Data-Model-DDR-IADC-Checklist-Parity.md
+06-Blueprint-Nextjs-Electron.md
+07-Prompt-Google-Stitch-Design.md
+08-Prompt-Tambahan-Finishing-QA.md
+starter/
