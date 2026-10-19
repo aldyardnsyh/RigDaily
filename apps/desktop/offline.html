@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:;" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RigDaily Internal — Offline</title>
+    <style>
+      /* Token sama dengan packages/ui/tokens.css (tanpa hex baru). */
+      :root {
+        --bg-app: #faf8ff;
+        --bg-surface: #ffffff;
+        --bg-surface-2: #f2f3ff;
+        --border-default: #e2e8f0;
+        --border-strong: #cbd5e1;
+        --text-primary: #131b2e;
+        --text-secondary: #43474d;
+        --text-muted: #64748b;
+        --accent-teal: #006b5c;
+        --accent-teal-hover: #005b4d;
+        --accent-mint: #81f7de;
+        --warning: #92400e;
+        --warning-soft: #fef3c7;
+        --danger: #ba1a1a;
+        --danger-soft: #ffdad6;
+        --success: #047857;
+        --success-soft: #ecfdf5;
+        --info: #002367;
+        --info-soft: #dbe1ff;
+        --row-alt: #f2f3ff;
+        --font-sans: "Inter", "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --page-pad: 24px;
+        --card-pad: 20px;
+        --gap: 16px;
+        --radius-card: 8px;
+        --radius-btn: 4px;
+        --radius-badge: 999px;
+        --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.05);
+        --control-h-lg: 44px;
+        --row-h: 45px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg-app);
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        line-height: 1.45;
+        padding: var(--page-pad);
+      }
+
+      header.topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--gap);
+        min-height: 64px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        padding: 0 var(--card-pad);
+        margin-bottom: var(--gap);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .brand small {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-muted);
+      }
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: var(--radius-badge);
+        background: var(--text-muted);
+        flex: none;
+      }
+      .dot.green {
+        background: var(--success);
+      }
+      .dot.amber {
+        background: var(--warning);
+      }
+      .dot.red {
+        background: var(--danger);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: var(--radius-badge);
+        font-size: 12px;
+        font-weight: 600;
+        background: var(--warning-soft);
+        color: var(--warning);
+      }
+      .badge.green {
+        background: var(--success-soft);
+        color: var(--success);
+      }
+      .badge.red {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+      .badge.amber {
+        background: var(--warning-soft);
+        color: var(--warning);
+      }
+
+      button {
+        height: var(--control-h-lg);
+        padding: 0 20px;
+        border-radius: var(--radius-btn);
+        border: 1px solid transparent;
+        background: var(--accent-teal);
+        color: #ffffff;
+        font: inherit;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      button:hover:not(:disabled) {
+        background: var(--accent-teal-hover);
+      }
+      button.secondary {
+        background: var(--bg-surface);
+        border-color: var(--border-strong);
+        color: var(--text-primary);
+      }
+      button:disabled {
+        opacity: 0.55;
+        cursor: progress;
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent-teal);
+        outline-offset: 1px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: var(--gap);
+        margin-bottom: var(--gap);
+      }
+
+      .kpi {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        padding: var(--card-pad);
+      }
+      .kpi .label {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+      }
+      .kpi .value {
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 1.25;
+        margin-top: 6px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        margin-bottom: var(--gap);
+        overflow: hidden;
+      }
+      .card h2 {
+        margin: 0;
+        padding: var(--card-pad);
+        font-size: 16px;
+        border-bottom: 1px solid var(--border-default);
+      }
+      .card .body {
+        padding: var(--card-pad);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 10px var(--card-pad);
+        border-bottom: 1px solid var(--border-default);
+        font-size: 13px;
+      }
+      th {
+        background: var(--bg-surface-2);
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+      }
+      tbody tr:nth-child(even) {
+        background: var(--row-alt);
+      }
+      td.empty {
+        color: var(--text-muted);
+        text-align: center;
+        padding: 28px var(--card-pad);
+      }
+
+      .note {
+        background: var(--info-soft);
+        color: var(--info);
+        border-radius: var(--radius-card);
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .note.warn {
+        background: var(--warning-soft);
+        color: var(--warning);
+      }
+      .muted {
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+      code {
+        background: var(--bg-surface-2);
+        border-radius: 3px;
+        padding: 1px 5px;
+        font-size: 12px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .spacer {
+        flex: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot amber" id="status-dot" aria-hidden="true"></span>
+        <div>
+          RigDaily Internal
+          <small id="device-line">Menyiapkan perangkat…</small>
+        </div>
+      </div>
+      <div class="row">
+        <span class="badge amber" id="status-badge"><span class="dot amber" id="badge-dot"></span><span id="status-text">Offline</span></span>
+        <button id="sync-now" type="button">Sync Now</button>
+        <button id="export-backup" class="secondary" type="button">Export Backup</button>
+      </div>
+    </header>
+
+    <div id="error-note" class="note warn" hidden></div>
+
+    <section class="grid" aria-label="Ringkasan sinkronisasi">
+      <div class="kpi">
+        <div class="label">Pending</div>
+        <div class="value" id="kpi-pending">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Gagal / DLQ</div>
+        <div class="value" id="kpi-failed">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Konflik</div>
+        <div class="value" id="kpi-conflicts">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Sync terakhir</div>
+        <div class="value" id="kpi-last" style="font-size: 16px">Belum pernah</div>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Draft lokal">
+      <h2>Draft &amp; laporan lokal (<span id="draft-count">0</span>)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 90px">No</th>
+            <th>Sumur</th>
+            <th style="width: 140px">Tanggal</th>
+            <th style="width: 100px">Baris</th>
+            <th style="width: 140px">Status</th>
+            <th style="width: 150px">Tersimpan</th>
+          </tr>
+        </thead>
+        <tbody id="draft-rows">
+          <tr>
+            <td class="empty" colspan="6">Memuat data lokal…</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card" aria-label="Petunjuk">
+      <div class="body">
+        <p style="margin: 0 0 8px">
+          <strong>Server kantor tidak terjangkau.</strong> Semua DDR tetap tersimpan di perangkat ini
+          (SQLite lokal) dan otomatis dikirim saat sinyal kembali. Tidak ada data yang hilang.</p>
+        <p class="muted" style="margin: 0">
+          Jadwal sync: setiap 60 detik + saat tombol <em>Sync Now</em> ditekan. Bila jaringan pulih,
+          aplikasi akan memuat ulang antarmuka lengkap secara manual lewat menu
+          <code>Tampilan → Muat ulang</code>.
+        </p>
+      </div>
+    </section>
+
+    <script>
+      (function () {
+        'use strict';
+
+        var api = window.rigdaily;
+        var $ = function (id) {
+          return document.getElementById(id);
+        };
+
+        function setBadge(indicator, text) {
+          var badge = $('status-badge');
+          badge.className = 'badge ' + indicator;
+          $('badge-dot').className = 'dot ' + indicator;
+          $('status-dot').className = 'dot ' + indicator;
+          $('status-text').textContent = text;
+        }
+
+        function fmtTime(iso) {
+          if (!iso) return 'Belum pernah';
+          var d = new Date(iso);
+          if (isNaN(d.getTime())) return '—';
+          return d.toLocaleString('id-ID', { hour12: false });
+        }
+
+        function renderState(state) {
+          if (!state) return;
+          $('kpi-pending').textContent = String(state.pending);
+          $('kpi-failed').textContent = String(state.failed);
+          $('kpi-conflicts').textContent = String(state.conflicts);
+          $('kpi-last').textContent = fmtTime(state.lastSyncAt);
+
+          if (state.lastError) {
+            var note = $('error-note');
+            note.hidden = false;
+            note.textContent = 'Sync error: ' + state.lastError;
+          }
+
+          if (state.indicator === 'green') setBadge('green', 'Synced');
+          else if (state.indicator === 'red') setBadge('red', 'Sync error');
+          else setBadge('amber', state.pending > 0 ? 'Pending ' + state.pending : 'Offline — saving locally');
+        }
+
+        function renderDrafts(reports) {
+          $('draft-count').textContent = String(reports.length);
+          var tbody = $('draft-rows');
+          tbody.innerHTML = '';
+
+          if (!reports.length) {
+            var empty = document.createElement('tr');
+            var cell = document.createElement('td');
+            cell.className = 'empty';
+            cell.colSpan = 6;
+            cell.textContent = 'Belum ada laporan lokal. Buat DDR baru saat antarmuka utama tersedia.';
+            empty.appendChild(cell);
+            tbody.appendChild(empty);
+            return;
+          }
+
+          reports.forEach(function (r) {
+            var tr = document.createElement('tr');
+            [
+              '#' + r.reportNo,
+              r.wellName || '—',
+              r.reportDate,
+              String(r.totalMinutes ? Math.round((r.totalMinutes / 60) * 10) / 10 + ' jam' : '—'),
+              r.status + (r.dirty ? ' • belum terkirim' : ''),
+              fmtTime(r.updatedAt),
+            ].forEach(function (value) {
+              var td = document.createElement('td');
+              td.textContent = value;
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          });
+        }
+
+        function refresh() {
+          if (!api) return;
+          api.sync
+            .state()
+            .then(renderState)
+            .catch(function () {});
+          api.reports
+            .list()
+            .then(renderDrafts)
+            .catch(function () {});
+          api.app
+            .info()
+            .then(function (info) {
+              $('device-line').textContent = 'Device ' + info.deviceId.slice(0, 8) + ' • v' + info.version;
+            })
+            .catch(function () {});
+        }
+
+        function onSyncClick() {
+          if (!api) return;
+          var btn = $('sync-now');
+          btn.disabled = true;
+          btn.textContent = 'Syncing…';
+          api.sync
+            .run()
+            .then(function (state) {
+              renderState(state);
+              return api.reports.list().then(renderDrafts);
+            })
+            .catch(function (err) {
+              var note = $('error-note');
+              note.hidden = false;
+              note.textContent = 'Sync gagal: ' + (err && err.message ? err.message : String(err));
+            })
+            .then(function () {
+              btn.disabled = false;
+              btn.textContent = 'Sync Now';
+            });
+        }
+
+        function onExportClick() {
+          if (!api) return;
+          var btn = $('export-backup');
+          btn.disabled = true;
+          api.backup
+            .export()
+            .then(function (res) {
+              if (res && res.path) {
+                var note = $('error-note');
+                note.className = 'note';
+                note.hidden = false;
+                note.textContent = 'Backup bundle ditulis: ' + res.path + ' (' + res.bytes + ' byte).';
+              }
+            })
+            .catch(function (err) {
+              var note = $('error-note');
+              note.className = 'note warn';
+              note.hidden = false;
+              note.textContent = 'Export gagal: ' + (err && err.message ? err.message : String(err));
+            })
+            .then(function () {
+              btn.disabled = false;
+            });
+        }
+
+        if (!api) {
+          $('device-line').textContent = 'Preload belum aktif — jalankan lewat Electron.';
+          return;
+        }
+
+        $('sync-now').addEventListener('click', onSyncClick);
+        $('export-backup').addEventListener('click', onExportClick);
+        api.sync.onState(renderState);
+
+        refresh();
+        // Segarkan daftar lokal tiap 15 detik (halaman ini offline, tanpa websocket).
+        setInterval(function () {
+          api.reports.list().then(renderDrafts).catch(function () {});
+        }, 15000);
+      })();
+    </script>
+  </body>
+</html>

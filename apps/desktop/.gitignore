@@ -1,0 +1,17 @@
+# Hasil compile TypeScript
+dist/
+
+# Output electron-builder
+release/
+build/icon.ico
+
+# Data runtime lokal (bila seseorang menjalankan app dengan userData di repo)
+*.db
+*.db-wal
+*.db-shm
+*.json.gz
+
+# Log & cache
+*.log
+npm-debug.log*
+.electron-rebuild/
