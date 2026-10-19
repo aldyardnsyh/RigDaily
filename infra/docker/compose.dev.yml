@@ -1,0 +1,44 @@
+# Compose DEV — PostgreSQL saja (untuk development lokal).
+# Produksi pakai infra/docker/compose.prod.yml (web + postgres + caddy).
+#
+# Port 55432 sengaja dipakai agar tidak bentrok dengan Postgres lokal di 5432.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rigdaily-pg-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rigdaily
+      POSTGRES_PASSWORD: rigdaily
+      POSTGRES_DB: rigdaily
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "55432:5432"
+    volumes:
+      - rigdaily_pg_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rigdaily -d rigdaily"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    # Hemat resource — VPS target 2 vCPU / 2GB RAM
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=60"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=768MB"
+      - "-c"
+      - "work_mem=8MB"
+      - "-c"
+      - "maintenance_work_mem=64MB"
+      - "-c"
+      - "wal_compression=on"
+      - "-c"
+      - "log_min_duration_statement=500"
+
+volumes:
+  rigdaily_pg_dev:

@@ -1,0 +1,73 @@
+# ============================================================================
+# rigdaily.service — OPSI NON-DOCKER: jalankan Next.js standalone via systemd.
+#
+# Pakai ini HANYA bila tidak ingin memakai Docker. Database tetap disarankan
+# PostgreSQL (lokal/managed). Untuk rute Docker (default), file ini tidak dipakai.
+#
+# PEMASANGAN:
+#   1. Salin hasil build standalone ke /opt/rigdaily/app
+#      (dari laptop: apps/web/.next/standalone + static + public).
+#   2. Kompilasi script server: npx tsc -p tsconfig.server.json
+#      lalu salin dist-server ke /opt/rigdaily/app/dist-server.
+#   3. sudo cp infra/systemd/rigdaily.service /etc/systemd/system/
+#   4. sudo systemctl daemon-reload && sudo systemctl enable --now rigdaily
+#
+# Memori dibatasi 700M (selaras mem_limit web di docker-compose.prod.yml) agar
+# OOM-killer membunuh layanan ini, bukan mis. sshd/postgres.
+# ============================================================================
+[Unit]
+Description=RigDaily Web (Next.js standalone)
+Documentation=file:///opt/rigdaily/docs/deploy/README.md
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rigdaily
+Group=rigdaily
+
+# Direktori aplikasi standalone: server.js ada di sini.
+WorkingDirectory=/opt/rigdaily/app
+
+# Env dari .env (DATABASE_URL, SEED_ON_START, SMTP_URL, TZ, dst).
+EnvironmentFile=/opt/rigdaily/.env
+# Env minimum yang tidak seharusnya di .env bersama.
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+Environment=TZ=Asia/Jakarta
+Environment=NEXT_TELEMETRY_DISABLED=1
+
+# Jalankan migrasi dulu (idempotent) lalu server. Bila ingin seed awal,
+# set SEED_ON_START=true di .env dan tambahkan baris seed di bawah.
+ExecStartPre=/usr/bin/node /opt/rigdaily/app/dist-server/database/src/migrate.js
+ExecStart=/usr/bin/node /opt/rigdaily/app/server.js
+
+# Restart otomatis bila crash.
+Restart=always
+RestartSec=5
+# Batas lonjakan restart (hindari loop tak terkendali).
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+# Batas resource (VPS 2 vCPU / 2 GB).
+MemoryMax=700M
+MemoryHigh=600M
+CPUQuota=150%
+
+# Hardening dasar.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/rigdaily
+# Boleh memakai banyak file descriptor untuk koneksi PG.
+LimitNOFILE=8192
+
+# Log via journald: journalctl -u rigdaily -f
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=rigdaily
+
+[Install]
+WantedBy=multi-user.target

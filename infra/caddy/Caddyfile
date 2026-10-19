@@ -1,0 +1,66 @@
+# ============================================================================
+# Caddyfile — reverse proxy RigDaily (HTTP/2 + HTTP/3, TLS otomatis)
+#
+# CARA KERJA TLS OTOMATIS:
+#   Saat Caddy mulai, ia melihat host `{$DOMAIN}`. Karena berupa domain (bukan
+#   IP/localhost), Caddy otomatis:
+#     1. Membuat/memakai akun ACME (disimpan di volume caddy_data).
+#     2. Meminta sertifikat ke Let's Encrypt (HTTP-01 atau TLS-ALPN-01).
+#        -> WAJIB: port 80 & 443 terbuka (ufw) dan DNS A record domain sudah
+#           menunjuk ke IP publik VPS SEBELUM container start.
+#     3. Menyimpan sertifikat di /data; diperbarui otomatis ~30 hari sebelum
+#        kedaluwarsa. Tidak ada cron manual.
+#   3. Mengalihkan HTTP -> HTTPS otomatis.
+#
+# BILA TANPA DOMAIN (hanya IP publik), ada 2 opsi — pilih satu, ganti blok
+# situs di bawah:
+#
+#   OPSI A — HTTP saja (paling sederhana, TIDAK ada TLS):
+#     :80 {
+#       reverse_proxy web:3000
+#     }
+#     Trade-off: semua trafik (termasuk cookie sesi & password login) lewat
+#     plaintext. Hanya untuk demo internal/uji cepat, JANGAN untuk data produksi.
+#
+#   OPSI B — TLS internal (self-signed):
+#     https://{$DOMAIN} {
+#       tls internal
+#       reverse_proxy web:3000
+#     }
+#     `DOMAIN` diisi IP publik VPS (mis. DOMAIN=203.0.113.10). Caddy membuat CA
+#     lokal; browser akan menampilkan peringatan sampai sertifikat root Caddy
+#     dipasang manual di tiap klien. Trade-off: terenkripsi, tapi tidak
+#     dipercaya publik — tidak cocok untuk pengguna umum.
+#
+#   REKOMENDASI: pakai domain + DNS A record. Let's Encrypt gratis dan
+#   otomatis; tidak ada alasan memakai IP di produksi.
+# ============================================================================
+
+{$DOMAIN} {
+	# Kompresi respons (Caddy mengabaikan zstd pada klien yang tidak dukung).
+	encode gzip zstd
+
+	# Header keamanan dasar. `-Server` menyembunyikan identitas server.
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	# Teruskan SEMUA trafik (halaman + /api/*) ke container web.
+	# Next.js menangani routing API; kita tidak memisahkan @api karena
+	# semua lewat upstream yang sama (lebih sederhana, hemat resource).
+	reverse_proxy web:3000 {
+		# Header IP klien nyata untuk audit_log (ip) & rate-limit.
+		# (X-Forwarded-Proto/For sudah di-set otomatis oleh Caddy.)
+		header_up X-Real-IP {remote_host}
+	}
+
+	# Log akses ke stdout -> ditangkap `docker logs`. Rotasi ukuran diatur
+	# oleh opsi logging json-file (max-size/max-file) di docker-compose.prod.yml.
+	log {
+		output stdout
+		format console
+	}
+}

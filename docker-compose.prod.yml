@@ -1,0 +1,136 @@
+# ============================================================================
+# docker-compose.prod.yml — RigDaily produksi
+#
+# Target: Tencent Cloud Lighthouse, 2 vCPU / ~2 GB RAM / 40 GB disk.
+# TANPA Redis / MinIO / Superset / Elasticsearch (lihat KONTRAK-FROZEN §8).
+#
+# PEMAKAIAN:
+#   cp .env.example .env         # lalu isi nilainya
+#   docker compose -f docker-compose.prod.yml --env-file .env up -d
+#
+# Memori (ringkasan; tabel lengkap di docs/deploy/README.md):
+#   db    ~430 MB (shared_buffers 192 + overhead + work_mem)
+#   web   ~700 MB (limit keras)
+#   caddy ~ 50 MB (limit 120 MB)
+#   TOTAL < 1.6 GB  -> menyisakan ~0.4 GB untuk OS + swap pengaman.
+# ============================================================================
+
+name: rigdaily
+
+services:
+  # -------------------------------------------------------------------------
+  # db — PostgreSQL 16. Hanya di network internal (port TIDAK dipublikasikan).
+  # -------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: rigdaily-db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rigdaily}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD wajib diisi di .env}
+      POSTGRES_DB: ${POSTGRES_DB:-rigdaily}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+      TZ: ${TZ:-Asia/Jakarta}
+    # Tuning via file milik kita (read-only). `-N 200` membatasi worker agar
+    # 2 vCPU tidak kewalahan; max_connections sudah ada di postgres.conf.
+    command:
+      - "postgres"
+      - "-c"
+      - "config_file=/etc/postgresql/postgresql.conf"
+      - "-c"
+      - "max_worker_processes=4"
+      - "-c"
+      - "max_parallel_workers=2"
+      - "-c"
+      - "max_parallel_workers_per_gather=1"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/docker/postgres.conf:/etc/postgresql/postgresql.conf:ro
+    # shared memory untuk sort/hash join; kecil karena VPS terbatas.
+    shm_size: 128mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rigdaily} -d ${POSTGRES_DB:-rigdaily}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    mem_limit: 430m
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # -------------------------------------------------------------------------
+  # web — image Next.js standalone. Image di-build di LAPTOP/CI, bukan di VPS.
+  # IMAGE_TAG di .env menentukan versi yang dipakai (edit saat rollout).
+  # -------------------------------------------------------------------------
+  web:
+    image: ${IMAGE_TAG:-rigdaily-web:latest}
+    container_name: rigdaily-web
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      TZ: ${TZ:-Asia/Jakarta}
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
+      # Pastikan DATABASE_URL menunjuk host `db` (bukan localhost) di .env:
+      #   DATABASE_URL=postgres://rigdaily:PASS@db:5432/rigdaily
+    depends_on:
+      db:
+        condition: service_healthy
+    # Port TIDAK dipublikasikan — hanya Caddy yang mengakses lewat network
+    # internal. Ini mencegah bypass TLS & menutup port 3000 ke internet.
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    mem_limit: 700m
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # -------------------------------------------------------------------------
+  # caddy — reverse proxy + TLS otomatis (Let's Encrypt). Biner kecil (~50MB).
+  # -------------------------------------------------------------------------
+  caddy:
+    image: caddy:2-alpine
+    container_name: rigdaily-caddy
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN wajib diisi di .env (mis. rigdaily.contoh.com)}
+      TZ: ${TZ:-Asia/Jakarta}
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data      # sertifikat TLS — JANGAN dihapus sembarangan
+      - caddy_config:/config
+    mem_limit: 120m
+    cpus: 0.30
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  pgdata:
+    # Backup via infra/scripts/backup.sh (pg_dump), bukan snapshot volume.
+  caddy_data:
+  caddy_config:
