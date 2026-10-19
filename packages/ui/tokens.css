@@ -1,0 +1,264 @@
+/**
+ * RigDaily Internal - Design Tokens EXACT dari Figma (via REST API, 13 Sep 2026)
+ * File: Dashboard Mudlogging (12 frames @1280px). Tanpa named styles di Figma,
+ * jadi nilai diagregasi dari 7.800+ node: fills, text styles, radii, effects.
+ * Aturan: JANGAN tambah hex baru. Semua komponen baca var ini.
+ */
+
+:root {
+  /* ===== APP SURFACE (frame bg #FAF8FF, login #F4F6F9) ===== */
+  --bg-app: #faf8ff;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #f2f3ff; /* input search, header tabel, grup pills */
+  --bg-sidebar: #0f2a44; /* Aside exact */
+  --bg-sidebar-active: #006b5c; /* nav Link aktif exact */
+  --bg-login: #f4f6f9;
+  --border-default: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  /* ===== TEXT ===== */
+  --text-primary: #131b2e; /* teks gelap dominan di Figma */
+  --text-secondary: #43474d; /* placeholder, ikon, chip tak aktif */
+  --text-muted: #64748b;
+  --text-nav-idle: #b0c9ea; /* nav sidebar tak aktif exact */
+  --text-on-dark: #ffffff;
+
+  /* ===== BRAND (M3 primary exact) ===== */
+  --accent-teal: #006b5c; /* Button primer exact, label putih 14/500 */
+  --accent-teal-hover: #005b4d; /* turun 1 tingkat dari primer */
+  --accent-teal-ring: rgba(0, 107, 92, 0.35);
+  --accent-mint: #81f7de; /* Validation Badge exact, teks gelap */
+  --accent-tonal: #e2e7ff; /* Button tonal exact */
+
+  /* ===== SEMANTIC (M3 exact) ===== */
+  --warning: #92400e;
+  --warning-soft: #fef3c7;
+  --danger: #ba1a1a; /* M3 error exact */
+  --danger-soft: #ffdad6; /* baris NPT + gap exact */
+  --danger-deep: #93000a; /* teks chip Disputed exact */
+  --success: #047857;
+  --success-soft: #ecfdf5;
+  --info: #002367; /* baris WOW exact (bg gelap, teks putih) */
+  --info-soft: #dbe1ff; /* baris live exact */
+  --row-alt: #f2f3ff; /* baris selang-seling exact */
+
+  /* ===== NPT / PRODUCTIVE (Time Grid exact) ===== */
+  --npt-bg: #ffdad6;
+  --npt-border-left: #ba1a1a;
+  --prod-bg: #ecfdf5;
+  --prod-border-left: #047857;
+  --wow-bg: #002367;
+
+  /* ===== CHART PALETTE ===== */
+  --chart-1: #0f2a44;
+  --chart-2: #006b5c;
+  --chart-3: #f59e0b;
+  --chart-4: #002367;
+  --chart-5: #8b5cf6;
+  --chart-6: #64748b;
+
+  /* ===== TYPOGRAPHY (ikut sumber Figma: Inter + tabular) ===== */
+  /* Font stack — system-ui pertama untuk kecepatan, tanpa unduhan jaringan */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Skala tipografi (shadcn-style: rapat, jelas, konsisten) */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.8125rem;  /* 13px */
+  --text-base: 0.875rem; /* 14px */
+  --text-md: 1rem;       /* 16px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --tracking-tight: -0.011em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-caps: 0.06em;
+
+  /* Alias kompatibilitas: token lama dipetakan ke skala baru (halaman lain tidak rusak) */
+  --text-display: var(--text-2xl);
+  --text-h1: var(--text-xl);
+  --text-h2: var(--text-md);
+  --text-body: var(--text-base);
+  --text-small: var(--text-sm);
+  --text-caption: var(--text-xs);
+  --leading-tight: 1.25;
+  --leading-normal: 1.45;
+
+  /* ===== SPACING (konten 24px, banner 20/24, nav 4/8 gap 4 - exact) ===== */
+  --page-pad: 24px;
+  --card-pad: 20px;
+  --card-pad-sm: 16px;
+  --gap: 16px;
+  --gap-sm: 12px;
+  --gap-xs: 8px;
+
+  /* ===== SHAPE (cards 8, buttons/inputs/chips 4, pills 9999 - exact) ===== */
+  --radius-card: 8px;
+  --radius-input: 4px;
+  --radius-btn: 4px;
+  --radius-badge: 999px;
+
+  /* ===== SHADOW (exact: 0 1 2 @5% cards, 0 1 8 @4% pop) ===== */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-pop: 0 1px 8px rgba(0, 0, 0, 0.04);
+
+  /* ===== LAYOUT SHELL (Aside 264, Header 64, frame 1280 - exact) ===== */
+  --sidebar-w: 264px;
+  --sidebar-w-collapsed: 72px;
+  --topbar-h: 64px;
+  --content-max: 1280px;
+  --control-h: 40px; /* Button + search exact */
+  --control-h-lg: 44px; /* mode sarung tangan rig */
+  --control-h-cell: 36px; /* input sel tabel exact */
+  --row-h: 45px; /* baris tabel exact */
+  --row-h-gap: 49px; /* baris gap exact */
+}
+
+/* ===== BASE ===== */
+* {
+  border-color: var(--border-default);
+}
+
+body {
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ===== UTILITAS TIPOGRAFI (shadcn-style) ===== */
+.type-h1 {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.3;
+}
+.type-h2 {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.4;
+}
+.type-label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.type-body {
+  font-size: var(--text-base);
+  font-weight: var(--weight-normal);
+  line-height: 1.5;
+}
+.type-small {
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+.type-metric {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+/* Angka pakai Plus Jakarta Sans tabular agar kolom depth/cost sejajar */
+.tnum {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Label form 12px uppercase */
+.field-label {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  display: block;
+}
+
+:where(input, select, textarea, button):focus-visible {
+  outline: 2px solid var(--accent-teal);
+  outline-offset: 1px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+  border: 2px solid var(--bg-app);
+}
+
+/* ===== PRINT: layar clean, cetak formal hemat tinta ===== */
+@media print {
+  body {
+    background: #fff !important;
+  }
+  .no-print,
+  aside,
+  header.topbar {
+    display: none !important;
+  }
+  .print-sheet {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+  }
+  table {
+    border-collapse: collapse !important;
+  }
+  table th,
+  table td {
+    border: 1px solid #000 !important;
+  }
+}
+
+/* ===== ANIMASI & STATE BERSAMA ===== */
+@keyframes rd-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Ringkasan state tabel yang seragam */
+tbody tr {
+  transition: background 120ms ease;
+}
+
+/* Cegah isi melebar keluar kartu di semua grid */
+main, main * { min-width: 0; }
+
+/* Teks panjang tidak menembus wadahnya */
+.truncate-safe {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Hormati preferensi gerakan minimal */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Denyut status aktif (dipakai indikator on-bottom drilling) */
+@keyframes rd-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.82); }
+}

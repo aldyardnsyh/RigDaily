@@ -1,0 +1,99 @@
+/* =========================================================================
+   RigDaily - animasi data & transisi
+   Dimuat setelah tokens.css. Semua warna memakai token; tanpa hex baru.
+   Prinsip: animasi harus membawa informasi (urutan waktu, perubahan nilai,
+   arah gerak alat), bukan hiasan. Semua dihormati oleh prefers-reduced-motion.
+   ========================================================================= */
+
+/* Konten halaman muncul halus saat navigasi, mengurangi kesan berat. */
+@keyframes rd-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+main.content > * {
+  animation: rd-fade-up 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Beberapa elemen pertama diberi jeda berbeda supaya masuk berurutan. */
+main.content > *:nth-child(2) {
+  animation-delay: 40ms;
+}
+main.content > *:nth-child(3) {
+  animation-delay: 80ms;
+}
+main.content > *:nth-child(4) {
+  animation-delay: 110ms;
+}
+
+/* Bar progres tumbuh dari kiri, memperjelas arah pencapaian. */
+@keyframes rd-grow-x {
+  from {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+/* Garis/denyut halus untuk indikator yang sedang aktif. */
+@keyframes rd-glow {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Skeleton loading berdenyut, bukan abu statis. */
+@keyframes rd-shimmer {
+  0% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.55;
+  }
+}
+
+.rd-skeleton {
+  animation: rd-shimmer 1.4s ease-in-out infinite;
+  background: var(--bg-surface-2);
+  border-radius: 4px;
+}
+
+/* Angka besar (KPI) diberi transisi warna halus saat nilainya berubah arah. */
+.kpi-value {
+  transition: color 220ms ease;
+}
+
+/* Hormati permintaan gerakan minimal: matikan animasi DEKORATIF.
+   Animasi yang membawa informasi (bar tumbuh, bit berputar) tetap berjalan
+   karena sudah diatur komponennya sendiri. */
+@media (prefers-reduced-motion: reduce) {
+  main.content > * {
+    animation: none !important;
+  }
+  .rd-skeleton {
+    animation: none !important;
+  }
+}
+
+/* Saat mencetak, jangan animasikan apa pun. */
+@media print {
+  main.content > * {
+    animation: none !important;
+  }
+}
