@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="RigDaily">
+  <title>RigDaily</title>
+  <!-- Dasar: kotak navy sesuai token --bg-sidebar -->
+  <rect width="64" height="64" rx="12" fill="#0F2A44" />
+
+  <!-- Derrick: dua kaki menyilang, aksen teal sesuai token --accent-teal -->
+  <g stroke="#0E9F8A" stroke-width="2.2" stroke-linecap="round" fill="none">
+    <line x1="20" y1="50" x2="32" y2="16" />
+    <line x1="44" y1="50" x2="32" y2="16" />
+    <line x1="24" y1="39" x2="40" y2="39" />
+    <line x1="27" y1="30" x2="37" y2="30" />
+  </g>
+
+  <!-- Crown block -->
+  <rect x="29" y="13" width="6" height="3" rx="1" fill="#F59E0B" />
+
+  <!-- Dasar rig -->
+  <rect x="18" y="50" width="28" height="3" rx="1.5" fill="#FFFFFF" />
+  <rect x="22" y="53" width="4" height="5" fill="#64748B" />
+  <rect x="38" y="53" width="4" height="5" fill="#64748B" />
+</svg>
