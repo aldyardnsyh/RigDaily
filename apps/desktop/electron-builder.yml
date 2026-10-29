@@ -17,6 +17,8 @@ files:
   - "dist/**"
   - "offline.html"
   - "package.json"
+  - "!node_modules/@rigdaily/shared/src/**"
+  - "!node_modules/@rigdaily/shared/tsconfig*.json"
 
 # better-sqlite3 adalah modul native: jangan dikemas ke dalam asar, dan WAJIB
 # di-rebuild terhadap ABI Electron (`npx electron-rebuild -f -w better-sqlite3`).
