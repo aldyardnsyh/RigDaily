@@ -1,10 +1,11 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ArrowRight, Check, CircleHelp, Download, Info, LockKeyhole, Monitor, RefreshCw } from 'lucide-react';
 import { DEMO_ACCOUNTS, DEMO_PASSWORD, ROLES, type DemoAccount } from '@rigdaily/shared';
+import { BrandMark } from '@rigdaily/ui';
 import { toast } from 'sonner';
 import { ApiClientError, apiSend } from '@/lib/api-client';
 import { useLocalIp } from '@/lib/hooks/useLocalIp';
@@ -53,8 +54,21 @@ type SystemContext = {
 
 type LoginResponse = { user: { name: string; email: string }; expiresAt: string };
 
+/**
+ * Marka produk memakai BrandMark bersama (komponen yang sama dipakai sidebar
+ * dashboard, landing page, dan favicon). Sebelumnya halaman ini menampilkan
+ * karakter "$" sehingga ikon login tidak sama dengan ikon di tab browser.
+ *
+ * `className` sengaja dipertahankan agar aturan ukuran responsif di globals.css
+ * (mode layar pendek) tetap berlaku: CSS menimpa atribut width/height SVG.
+ */
 function RigMark({ small = false }: { small?: boolean }) {
-  return <span className={small ? 'auth-mark auth-mark-small' : 'auth-mark'} aria-hidden>$</span>;
+  return (
+    <BrandMark
+      size={small ? 40 : 54}
+      className={small ? 'auth-mark auth-mark-small' : 'auth-mark'}
+    />
+  );
 }
 
 /** `?next=` hanya boleh path internal (`/foo`) supaya tidak jadi open redirect. */
@@ -120,6 +134,16 @@ function LoginForm() {
   const [syncStatus, setSyncStatus] = useState('Menunggu masuk');
   const [loginInfo, setLoginInfo] = useState<LoginInfo | null>(null);
   const [activity, setActivity] = useState<LoginActivity | null>(null);
+
+  /*
+   * Tombol "Coba mode demo" di landing page mengarah ke /login?demo=1.
+   * Ketika parameter itu ada dan instalasi memang mengaktifkan demo, kita
+   * langsung masuk sebagai Administrator supaya pengunjung tidak perlu memilih
+   * peran dulu. Penjaga `autoDemoStarted` mencegah pemanggilan ganda (React
+   * Strict Mode menjalankan effect dua kali saat pengembangan).
+   */
+  const demoRequested = params?.get('demo') === '1';
+  const autoDemoStarted = useRef(false);
 
   /*
    * Konteks perangkat & waktu dari SERVER.
@@ -260,6 +284,21 @@ function LoginForm() {
     }
   }
 
+  /*
+   * Pintu masuk mode demo dari landing page: /login?demo=1.
+   * Dijalankan sekali setelah /api/system/login-info memastikan demo aktif.
+   * Bila demo tidak aktif, tidak ada yang terjadi dan pengunjung tetap melihat
+   * form login biasa beserta catatan bahwa demo tidak tersedia.
+   */
+  useEffect(() => {
+    if (!demoRequested || autoDemoStarted.current) return;
+    if (!loginInfo?.demo) return;
+    autoDemoStarted.current = true;
+    const admin = DEMO_ACCOUNTS.find((account) => account.role === 'Admin') ?? DEMO_ACCOUNTS[0];
+    void demoSignIn(admin);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoRequested, loginInfo]);
+
   function syncNow() {
     setSyncStatus('Menyinkronkan');
     const toastId = toast.loading('Memeriksa status perangkat');
@@ -349,6 +388,21 @@ function LoginForm() {
               <p>Gunakan kredensial kontraktor atau operator yang telah terdaftar.</p>
             </div>
             <div className="auth-rule" />
+
+            {demoRequested && (
+              <p className="auth-demo-entry" role="status">
+                <Info size={16} aria-hidden style={{ flexShrink: 0 }} />
+                <span>
+                  {loginInfo?.demo
+                    ? demoBusy
+                      ? 'Menyiapkan mode demo sebagai Administrator...'
+                      : 'Mode demo aktif. Memilih peran di bawah juga membuka data contoh.'
+                    : loginInfo
+                      ? 'Mode demo tidak aktif pada instalasi ini. Masuk dengan kredensial dari administrator.'
+                      : 'Memeriksa ketersediaan mode demo...'}
+                </span>
+              </p>
+            )}
 
             <form onSubmit={signIn} className="auth-form" noValidate>
               <label className="auth-label" htmlFor="login-email">

@@ -1,4 +1,5 @@
 export { Button } from './components/button';
+export { BrandMark } from './components/brand-mark';
 export { Field } from './components/field';
 export { Badge } from './components/badge';
 export type { StatusKind } from './components/badge';

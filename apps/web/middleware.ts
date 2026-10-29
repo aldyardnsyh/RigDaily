@@ -48,6 +48,18 @@ export function middleware(req: NextRequest): NextResponse {
     return res;
   }
 
+  /*
+   * LANDING PAGE: halaman awal publik.
+   *
+   * `/` sengaja tidak dialihkan ke /login. Pengunjung pertama melihat
+   * penjelasan produk lebih dulu, lalu memilih tombol Masuk atau Coba demo.
+   * Tanpa pengecualian ini, middleware akan melempar setiap pengunjung baru
+   * langsung ke form login dan halaman depan tidak pernah tampil.
+   */
+  if (pathname === '/') {
+    return NextResponse.next();
+  }
+
   // Halaman terlindungi tanpa sesi -> /login dengan tujuan semula.
   if (!hasSession) {
     const url = req.nextUrl.clone();
@@ -70,5 +82,17 @@ export function middleware(req: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|reports).*)'],
+  /*
+   * `.*\\..*` mengecualikan SEMUA path yang mengandung titik (ekstensi berkas).
+   *
+   * BUG YANG DIPERBAIKI: sebelumnya daftar pengecualian hanya menyebut
+   * `favicon.ico`, sehingga `/icon.svg`, `/apple-icon.svg`, dan `/favicon.svg`
+   * ikut diproses middleware dan dibalas HTML halaman login. Akibatnya
+   * `Content-Type` ikon menjadi `text/html` dan tidak ada ikon yang tampil di
+   * tab browser. Pola berbasis ekstensi menutup seluruh kelas masalah ini
+   * (ikon, manifest, png, woff, dan aset statis lain yang ditambahkan nanti).
+   *
+   * Halaman aplikasi tidak memiliki titik pada path-nya, jadi tidak terpengaruh.
+   */
+  matcher: ['/((?!api|_next/static|_next/image|reports|.*\\..*).*)'],
 };

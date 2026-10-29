@@ -1,6 +1,7 @@
 'use client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { cn } from '../lib/cn';
+import { BrandMark } from './brand-mark';
 import {
   Activity,
   Banknote,
@@ -346,12 +347,12 @@ export function AppShell({
       {mobileOpen && <button type="button" className="shell-scrim no-print" aria-label="Tutup navigasi" onClick={() => setMobileOpen(false)} />}
       <aside className={cn('sidebar no-print flex min-h-screen w-[var(--sidebar-w)] flex-col', mobileOpen && 'sidebar-open')} aria-label="Navigasi utama">
         <div className="sidebar-brand flex items-center gap-2">
-            <span
-            aria-hidden
-            className="sidebar-mark flex h-8 w-8 items-center justify-center rounded-[var(--radius-input)] bg-[var(--accent-teal)] text-[15px] font-bold text-white"
-          >
-              <HardHat size={17} strokeWidth={2} />
-          </span>
+          {/*
+            Marka memakai komponen BrandMark yang sama dengan favicon, login,
+            dan landing page. Sebelumnya di sini dipakai ikon helm dari pustaka
+            Lucide, sehingga ikon di sidebar berbeda dengan ikon di tab browser.
+          */}
+          <BrandMark size={32} onDark />
           <span className="sidebar-wordmark leading-tight">
             <span className="block text-[16px] font-bold tracking-wide">RigDaily</span>
             <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--text-nav-idle)]">

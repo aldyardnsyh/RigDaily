@@ -19,18 +19,25 @@ export const metadata: Metadata = {
     'Pelaporan operasi sumur harian: DDR, time breakdown 24 jam, NPT, biaya dan AFE, billing, serta sinkronisasi rig ke kantor.',
   applicationName: 'RigDaily',
   /*
-   * Ikon memakai SVG statis dari `app/icon.svg`. SVG dipilih karena ringan,
-   * tajam di semua ukuran, dan tidak memerlukan render gambar saat build.
-   * (Pendekatan `ImageResponse` sempat dicoba, tetapi gagal bila path proyek
-   * mengandung spasi karena pustaka og membangun URL dari path tersebut.)
+   * Ikon.
+   *
+   * `app/favicon.ico` dilayani otomatis oleh Next di /favicon.ico, jadi ia
+   * TIDAK didaftarkan di sini (mendaftarkannya lagi hanya membuat tag ganda).
+   * Yang didaftarkan: SVG (tajam di semua ukuran) dan PNG untuk peramban serta
+   * perangkat yang tidak memakai SVG sebagai ikon tab.
+   *
+   * Catatan penting: path berakhiran ekstensi kini dikecualikan di middleware,
+   * kalau tidak berkas ikon dibalas HTML dan tidak pernah tampil.
    */
   icons: {
     icon: [
+      { url: '/favicon.ico', sizes: '16x16 32x32 48x48', type: 'image/x-icon' },
       { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: [{ url: '/apple-icon.svg', type: 'image/svg+xml', sizes: '180x180' }],
-    shortcut: ['/favicon.svg'],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    shortcut: ['/favicon.ico'],
   },
   /*
    * themeColor navy, sama dengan sidebar, agar warna address bar browser
