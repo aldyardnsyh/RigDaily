@@ -5,6 +5,11 @@
  * tidak bisa, tapi health harus tetap menjawab).
  *
  * 200 = DB ok, 503 = DB tidak bisa dihubungi.
+ *
+ * Identitas build (vendor, edition, commit) ikut disertakan supaya instalasi
+ * resmi PSHT bisa dibedakan dari salinan yang dihapus atribusinya. Ini BUKAN
+ * telemetri: tidak ada data pengguna, tidak ada ping keluar, hanya menjawab
+ * saat ditanya.
  */
 import { sql } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
@@ -15,6 +20,14 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const VERSION = '0.1.0';
+
+/** Identitas build, diisi saat build dari env. Nilai default = build lokal. */
+const BUILD_IDENTITY = {
+  vendor: 'PogungSoftwareHouseTeam',
+  edition: process.env.APP_EDITION ?? 'community',
+  commit: process.env.BUILD_COMMIT ?? 'local',
+  builtAt: process.env.BUILD_TIME ?? new Date().toISOString(),
+} as const;
 
 export async function GET(): Promise<Response> {
   let dbOk = false;
@@ -33,6 +46,7 @@ export async function GET(): Promise<Response> {
     uptimeSec: Math.round(process.uptime()),
     version: VERSION,
     time: new Date().toISOString(),
+    identity: BUILD_IDENTITY,
   };
 
   if (!dbOk) {

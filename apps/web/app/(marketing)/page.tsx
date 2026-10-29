@@ -148,46 +148,46 @@ const FLOW_STEPS = [
   {
     status: 'Draft',
     tone: 'draft',
-    desc: 'Rig Clerk menyusun DDR. Isian tersimpan otomatis, validasi menolak total menit yang belum 1.440.',
+    desc: 'Rig Clerk menyusun DDR tanpa takut kehilangan isian karena tersimpan otomatis dan total menit wajib pas 1.440.',
   },
   {
     status: 'Diajukan',
     tone: 'submitted',
-    desc: 'Laporan masuk antrean review Company Man untuk rig yang di-assign.',
+    desc: 'Laporan masuk antrean Company Man sehingga rig yang ditugaskan jelas penanggung jawabnya.',
   },
   {
     status: 'Disetujui',
     tone: 'approved',
-    desc: 'Tanda tangan digital dan konfirmasi biaya sebelum laporan dianggap final.',
+    desc: 'Tanda tangan dan konfirmasi biaya menjadi bukti bahwa angka sudah disepakati sebelum final.',
   },
   {
     status: 'Terdistribusi',
     tone: 'distributed',
-    desc: 'PDF dikirim ke daftar penerima sesuai jadwal yang diatur Reporter.',
+    desc: 'PDF harian terkirim ke penerima yang berhak tanpa perlu meneruskan manual.',
   },
   {
     status: 'Terkunci',
     tone: 'locked',
-    desc: 'Tidak ada penyuntingan langsung. Perubahan hanya lewat amendment bernomor.',
+    desc: 'Laporan terkunci penuh sehingga koreksi hanya sah lewat amendment bernomor dan beralasan.',
   },
 ] as const;
 
 const MODULE_ROWS = [
-  ['Biaya dan AFE', 'Biaya harian, kumulatif, dan pemakaian AFE dalam satu baris.'],
-  ['Billing bulanan', 'Rekap tagihan per rig dan per kontrak untuk ditinjau Cost Controller.'],
-  ['Personel dan POB', 'Susunan kru per shift beserta hitungan orang di atas rig.'],
-  ['Marine dan MAC', 'Pergerakan kapal, pasang surut, dan aktivitas ganda pada dual derrick.'],
-  ['Safety dan HSE', 'Insiden, observasi, dan klasifikasi NPT yang bisa ditelusuri.'],
-  ['Bits, casing, cement', 'Riwayat mata bor, rangkaian casing, dan operasi penyemenan per sumur.'],
-  ['Well file dan performa', 'Berkas sumur lengkap serta perbandingan performa antar sumur.'],
-  ['Insights', 'Tren kedalaman, NPT, dan biaya untuk dibaca manajemen.'],
+  ['Biaya dan AFE', 'Biaya harian dan kumulatif berdampingan dengan pemakaian AFE per sumur.'],
+  ['Billing bulanan', 'Rekap tagihan per rig dan per kontrak, siap ditinjau Cost Controller sebelum dikirim.'],
+  ['Personel dan POB', 'Daftar kru per shift beserta total orang di atas rig untuk kebutuhan manifes.'],
+  ['Marine dan MAC', 'Pergerakan kapal, data pasang surut, dan aktivitas dual derrick dalam satu catatan.'],
+  ['Safety dan HSE', 'Insiden, observasi, dan klasifikasi NPT yang tertaut ke jam dan aktivitasnya.'],
+  ['Bits, casing, cement', 'Riwayat mata bor, rangkaian casing, dan penyemenan yang tersambung ke kedalaman harian.'],
+  ['Well file dan performa', 'Berkas tiap sumur terkumpul rapi untuk perbandingan performa antar sumur.'],
+  ['Insights', 'Tren kedalaman, NPT, dan biaya disajikan untuk bahan keputusan manajemen.'],
 ] as const;
 
 const SECURITY_POINTS = [
-  'Izin diperiksa di server pada setiap permintaan, bukan hanya disembunyikan dari menu.',
-  'Approve, perubahan biaya, dan penguncian laporan tercatat di audit log.',
-  'Amendment wajib menyertakan alasan dan nomor revisi, jadi angka lama tetap terlacak.',
-  'Sesi berakhir otomatis. Cookie sisa dibersihkan saat sesi tidak lagi valid.',
+  'Izin tiap peran diperiksa di server pada setiap permintaan, bukan sekadar disembunyikan dari menu.',
+  'Setiap approve, perubahan biaya, dan penguncian laporan tercatat di audit log beserta pelakunya.',
+  'Setiap amendment wajib beralasan dan bernomor, sehingga angka lama tetap bisa ditelusuri.',
+  'Sesi berakhir otomatis dan cookie sisa dibersihkan begitu sesi tidak lagi valid.',
 ] as const;
 
 export default function LandingPage() {
@@ -248,38 +248,40 @@ export default function LandingPage() {
         <section className="lp-hero" aria-labelledby="lp-hero-title">
           <div className="lp-shell lp-hero-grid">
             <div className="lp-hero-copy">
-              <p className="lp-eyebrow">Pelaporan operasi sumur harian</p>
-              <h1 id="lp-hero-title">Laporan harian rig selesai sebelum shift berganti.</h1>
+              <p className="lp-eyebrow">Sistem pelaporan operasi sumur untuk rig dan kantor</p>
+              <h1 id="lp-hero-title">Laporan harian rig beres sebelum serah terima shift.</h1>
               <p className="lp-lede">
-                RigDaily menyatukan time breakdown 24 jam, NPT, biaya, personel, dan kondisi sumur
-                dalam satu laporan yang bisa ditinjau dari kantor. Setelah disetujui, laporan
-                terkunci dan terdistribusi ke penerima yang berhak.
+                RigDaily mencatat DDR, time breakdown 24 jam, NPT, biaya, dan personel dalam satu
+                laporan yang ditinjau kantor. Tersedia sebagai aplikasi web untuk kantor dan
+                aplikasi desktop .exe offline-first untuk rig. Setelah disetujui, laporan terkunci
+                dan terdistribusi ke penerima yang berhak.
               </p>
 
               <div className="lp-cta-row">
                 <Link href="/login" className="lp-btn lp-btn-primary lp-btn-lg">
-                  Masuk ke aplikasi
+                  Masuk dengan akun kantor
                 </Link>
                 <Link href="/login?demo=1" className="lp-btn lp-btn-outline lp-btn-lg">
-                  Coba mode demo
+                  Jelajahi data contoh demo
                 </Link>
               </div>
               <p className="lp-note">
-                Mode demo memakai data contoh yang bisa direset kapan saja. Tidak perlu mendaftar.
+                Mode demo memakai data contoh yang bisa direset kapan saja. Tanpa daftar, langsung
+                masuk sebagai 7 peran.
               </p>
 
               <ul className="lp-facts">
                 <li>
                   <strong className="tnum">Time breakdown 24 jam</strong>
-                  <span>1.440 menit per hari, divalidasi tanpa celah dan tanpa tumpang tindih.</span>
+                  <span>1.440 menit per hari divalidasi penuh, tidak ada celah dan tidak ada tumpang tindih.</span>
                 </li>
                 <li>
                   <strong>7 peran</strong>
-                  <span>Dari Rig Clerk sampai Administrator, masing-masing dengan cakupan sendiri.</span>
+                  <span>Dari Rig Clerk sampai Administrator, izin tiap peran diperiksa di server.</span>
                 </li>
                 <li>
-                  <strong>Input di rig, tinjau di kantor</strong>
-                  <span>Data tersimpan lokal di rig dan tersinkron saat jaringan kembali.</span>
+                  <strong>Web di kantor, .exe di rig</strong>
+                  <span>Aplikasi desktop Electron dengan SQLite lokal, sinkron lewat outbox saat jaringan kembali.</span>
                 </li>
               </ul>
             </div>
@@ -306,10 +308,10 @@ export default function LandingPage() {
               <p className="lp-kicker">
                 <SectionMark /> Kontrol laporan
               </p>
-              <h2 id="lp-alur-title">Satu laporan, lima status yang tidak bisa dilompati.</h2>
+              <h2 id="lp-alur-title">Satu laporan, lima status yang terkendali.</h2>
               <p className="lp-sub">
-                Setiap perpindahan status tercatat beserta pelakunya. Laporan yang sudah disetujui
-                tidak bisa ditimpa oleh kiriman rig.
+                Draft ke Diajukan ke Disetujui ke Terdistribusi ke Terkunci. Setiap perpindahan
+                tercatat beserta pelakunya di audit log.
               </p>
             </div>
 
@@ -335,26 +337,26 @@ export default function LandingPage() {
               <p className="lp-kicker">
                 <SectionMark /> Modul
               </p>
-              <h2 id="lp-modul-title">Yang dicatat setiap hari, dan yang dibaca setiap bulan.</h2>
+              <h2 id="lp-modul-title">Catatan harian rig, bacaan bulanan manajemen.</h2>
               <p className="lp-sub">
-                Semua modul membaca sumur, rig, dan tanggal yang sama. Angka di layar, PDF, dan
-                dashboard berasal dari satu perhitungan.
+                Semua modul membaca sumur, rig, dan tanggal yang sama. Angka di layar, PDF harian,
+                dan dashboard berasal dari satu perhitungan.
               </p>
             </div>
 
             <div className="lp-modules">
               <article className="lp-module-main">
                 <p className="lp-module-tag">Inti harian</p>
-                <h3>DDR dan time breakdown</h3>
+                <h3>DDR dan time breakdown 24 jam</h3>
                 <p>
                   Formulir harian mengikuti urutan kerja di rig: header sumur, kedalaman, lumpur,
-                  BHA, time breakdown 24 jam, biaya, safety, lalu rencana hari berikutnya. Validasi
-                  menolak laporan yang menitnya belum habis atau kedalaman yang mundur.
+                  BHA, time breakdown 24 jam, biaya, safety, lalu rencana esok hari. Laporan dengan
+                  menit belum 1.440 atau kedalaman mundur tertolak sebelum diajukan.
                 </p>
                 <ul className="lp-module-checks">
-                  <li>Total 1.440 menit diperiksa sebelum laporan bisa diajukan.</li>
-                  <li>Kode IADC dan kode NPT dipilih dari daftar, bukan diketik bebas.</li>
-                  <li>PDF harian memakai angka yang sama dengan layar.</li>
+                  <li>Total 1.440 menit diperiksa sebelum laporan bisa diajukan ke Company Man.</li>
+                  <li>Kode IADC dan kode NPT dipilih dari daftar baku, bukan ketikan bebas yang sulit direkap.</li>
+                  <li>PDF harian memakai angka yang sama persis dengan yang tampil di layar.</li>
                 </ul>
               </article>
 
@@ -379,8 +381,8 @@ export default function LandingPage() {
               </p>
               <h2 id="lp-peran-title">Tujuh peran, satu sumber data.</h2>
               <p className="lp-sub">
-                Cakupan tiap peran ditentukan di server. Daftar di bawah adalah peran yang benar
-                benar ada di aplikasi, bukan contoh pemasaran.
+                Tujuh peran di bawah aktif di aplikasi dan izinnya diperiksa di server pada setiap
+                permintaan.
               </p>
             </div>
 
@@ -408,15 +410,15 @@ export default function LandingPage() {
               <p className="lp-kicker">
                 <SectionMark /> Rig ke kantor
               </p>
-              <h2 id="lp-sinkron-title">Jaringan putus bukan alasan laporan hilang.</h2>
+              <h2 id="lp-sinkron-title">Mati lampu atau internet putus, data tetap aman.</h2>
               <p>
-                Data ditulis lebih dulu ke basis data lokal di rig, lalu dikirim ke kantor sebagai
-                perubahan kecil, bukan kiriman penuh. Saat VSAT putus, antrean menunggu dan
-                terkirim ketika jaringan kembali.
+                Aplikasi desktop di rig menulis ke SQLite lokal dulu, lalu menitipkan kiriman di
+                outbox sebagai perubahan kecil. Saat internet putus, antrean menunggu dengan aman
+                dan terkirim sendiri ketika jaringan kembali.
               </p>
               <p>
-                Kalau kantor sudah menyetujui laporan yang sama, kiriman rig tidak menimpa hasil
-                final. Data masuk daftar konflik untuk diselesaikan manual, berdampingan.
+                Jika kantor sudah menyetujui laporan yang sama, kiriman rig tidak menimpa hasil
+                final. Data masuk daftar konflik untuk diselesaikan manual berdampingan.
               </p>
             </div>
 
@@ -469,18 +471,18 @@ export default function LandingPage() {
         <section className="lp-band" aria-labelledby="lp-band-title">
           <div className="lp-shell lp-band-inner">
             <div>
-              <h2 id="lp-band-title">Lihat alurnya dengan data contoh.</h2>
+              <h2 id="lp-band-title">Coba alur approve dengan data contoh.</h2>
               <p>
-                Masuk sebagai salah satu dari tujuh peran, lalu coba approve, amendment, dan ekspor
-                PDF harian.
+                Masuk sebagai salah satu dari tujuh peran, lalu uji approve, amendment bernomor,
+                dan ekspor PDF harian.
               </p>
             </div>
             <div className="lp-cta-row lp-band-actions">
               <Link href="/login?demo=1" className="lp-btn lp-btn-onnavy lp-btn-lg">
-                Coba mode demo
+                Jelajahi data contoh demo
               </Link>
               <Link href="/login" className="lp-btn lp-btn-outline-navy lp-btn-lg">
-                Masuk dengan kredensial
+                Masuk dengan akun kantor
               </Link>
             </div>
           </div>
@@ -494,7 +496,7 @@ export default function LandingPage() {
             <BrandMark size={28} />
             <div>
               <strong>RigDaily</strong>
-              <span>Pelaporan operasi sumur untuk operator dan kontraktor pengeboran.</span>
+              <span>Pelaporan operasi sumur harian, web di kantor dan desktop .exe di rig.</span>
             </div>
           </div>
 

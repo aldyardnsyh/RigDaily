@@ -11,6 +11,15 @@ if (envLoad.applied > 0) {
 
 const isStandalone = process.env.NEXT_OUTPUT === 'standalone';
 
+/*
+ * Identitas build: disuntik saat build agar setiap deployment membawa jejak
+ * asalnya (vendor, edisi, commit, waktu build). Dibaca oleh /api/health.
+ * Nilai default aman untuk build lokal tanpa CI.
+ */
+process.env.APP_EDITION = process.env.APP_EDITION ?? 'community';
+process.env.BUILD_COMMIT = process.env.BUILD_COMMIT ?? process.env.VERCEL_GIT_COMMIT_SHA ?? 'local';
+process.env.BUILD_TIME = process.env.BUILD_TIME ?? new Date().toISOString();
+
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@rigdaily/ui'],
