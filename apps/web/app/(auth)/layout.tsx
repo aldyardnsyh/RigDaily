@@ -1,5 +1,18 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
+
+/*
+ * Halaman login butuh sesi (atau justru tidak boleh dikunjungi saat sudah
+ * login), jadi tidak boleh terindeks mesin pencari. Aturan global di root
+ * layout mengizinkan indeks, tetapi layout tersarang ini menimpanya.
+ */
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 /**
  * Layout halaman autentikasi (login).

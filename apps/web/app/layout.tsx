@@ -6,18 +6,75 @@ import { ToasterClient } from '../components/ToasterClient';
 // packages/ui/tokens.css dengan fallback system-ui). Sengaja TIDAK memakai
 // next/font/google agar build/dev tidak bergantung koneksi ke Google Fonts:
 // sebelumnya kegagalan unduh Inter memicu AbortError dan memperlambat request.
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   /*
    * Title memakai template: setiap halaman bisa menambahkan judulnya sendiri
    * lewat `export const metadata` dan otomatis mendapat akhiran "RigDaily".
    */
   title: {
-    default: 'RigDaily - Well Operations Reporting',
+    default: 'RigDaily - Pelaporan Operasi Sumur Harian',
     template: '%s | RigDaily',
   },
   description:
-    'Pelaporan operasi sumur harian: DDR, time breakdown 24 jam, NPT, biaya dan AFE, billing, serta sinkronisasi rig ke kantor.',
+    'RigDaily mencatat DDR harian, time breakdown 24 jam, NPT, biaya, personel, dan kondisi sumur di rig, lalu menyinkronkannya ke kantor untuk disetujui dan didistribusikan.',
   applicationName: 'RigDaily',
+  authors: [{ name: 'PogungSoftwareHouseTeam' }],
+  creator: 'PogungSoftwareHouseTeam',
+  publisher: 'PogungSoftwareHouseTeam',
+  keywords: [
+    'daily drilling report',
+    'DDR',
+    'laporan harian pengeboran',
+    'time breakdown',
+    'NPT',
+    'operasi sumur',
+    'well operations',
+    'rig reporting',
+    'AFE',
+    'laporan pengeboran migas',
+  ],
+  /*
+   * Halaman aplikasi butuh sesi; hanya halaman depan publik yang boleh diindeks.
+   * Aturan per-rute yang lebih rinci ada di app/robots.ts.
+   */
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: '/',
+  },
+  /*
+   * Open Graph + Twitter Card: pratinjau saat tautan dibagikan.
+   * Gambar memakai ikon 512 yang sudah ada, supaya tidak ada aset baru.
+   */
+  openGraph: {
+    type: 'website',
+    locale: 'id_ID',
+    url: '/',
+    siteName: 'RigDaily',
+    title: 'RigDaily - Pelaporan Operasi Sumur Harian',
+    description:
+      'DDR harian, time breakdown 24 jam, NPT, biaya, dan sinkronisasi rig ke kantor dalam satu alur.',
+    images: [
+      {
+        url: '/icon-512.png',
+        width: 512,
+        height: 512,
+        alt: 'Marka RigDaily',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'RigDaily - Pelaporan Operasi Sumur Harian',
+    description:
+      'DDR harian, time breakdown 24 jam, NPT, biaya, dan sinkronisasi rig ke kantor dalam satu alur.',
+    images: ['/icon-512.png'],
+  },
   /*
    * Ikon.
    *

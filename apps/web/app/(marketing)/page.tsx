@@ -7,6 +7,12 @@ import './landing.css';
 /**
  * LANDING PAGE (halaman awal publik).
  *
+ * Halaman ini satu-satunya rute yang boleh diindeks mesin pencari
+ * (lihat app/robots.ts dan app/sitemap.ts). Metadata di bawah melengkapi
+ * metadata global dari root layout dengan judul dan deskripsi khusus halaman
+ * depan, supaya hasil pencarian menampilkan ringkasan yang menjual.
+ */
+ *
  * Aturan halaman ini:
  *  - Halaman pertama yang dimuat saat membuka domain. Tidak memerlukan sesi.
  *  - Dua jalan masuk: `/login` untuk kredensial, `/login?demo=1` untuk mencoba
@@ -24,6 +30,15 @@ export const metadata: Metadata = {
   title: 'RigDaily - Pelaporan Operasi Sumur Harian',
   description:
     'RigDaily mencatat DDR, time breakdown 24 jam, NPT, biaya, personel, dan kondisi sumur di rig, lalu menyinkronkannya ke kantor untuk disetujui dan didistribusikan.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    url: '/',
+    title: 'RigDaily - Pelaporan Operasi Sumur Harian',
+    description:
+      'Laporan harian rig selesai sebelum shift berganti: DDR, time breakdown 24 jam, NPT, biaya, dan sinkronisasi rig ke kantor.',
+  },
 };
 
 /**
@@ -179,6 +194,27 @@ const SECURITY_POINTS = [
 export default function LandingPage() {
   return (
     <div className="lp">
+      {/* JSON-LD: memberi tahu Google bahwa ini halaman produk perangkat lunak,
+          supaya berhak tampil sebagai rich result (nama, deskripsi, bahasa). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'RigDaily',
+            applicationCategory: 'BusinessApplication',
+            operatingSystem: 'Web',
+            inLanguage: 'id',
+            description:
+              'Pelaporan operasi sumur harian: DDR, time breakdown 24 jam, NPT, biaya, personel, dan sinkronisasi rig ke kantor.',
+            author: {
+              '@type': 'Organization',
+              name: 'PogungSoftwareHouseTeam',
+            },
+          }),
+        }}
+      />
       {/* ---------------- Topbar ---------------- */}
       <header className="lp-topbar">
         <div className="lp-topbar-inner">

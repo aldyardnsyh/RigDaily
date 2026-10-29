@@ -1,8 +1,21 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { clearSessionCookie, getSessionUser } from '@/lib/auth';
 import { isDemoMode } from '@/lib/demo';
 import { ShellNav } from '../../components/ShellNav';
+
+/*
+ * Seluruh area aplikasi butuh sesi dan berisi data operasional internal,
+ * jadi tidak boleh terindeks mesin pencari. Hanya halaman depan publik
+ * yang boleh diindeks (diatur di root layout).
+ */
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 /**
  * Layout area terautentikasi - GERBANG RBAC SESUNGGUHNYA.
