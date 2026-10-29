@@ -497,6 +497,20 @@ Sisa RAM dipakai sistem operasi dan cache. Tidak ada Redis, MinIO, atau metrik p
 
 Di produksi, `DATABASE_URL` wajib diisi dan `RIGDAILY_DRIVER` harus kosong. Entrypoint container menolak menyala bila masih mengarah ke PGlite, supaya data tidak hilang saat container dibuat ulang.
 
+## Demo publik di Vercel
+
+Untuk memamerkan aplikasi tanpa menyiapkan PostgreSQL, deploy ke Vercel dengan
+Root Directory `rimbase-rebuild/apps/web` dan environment variable
+`RIGDAILY_DEMO=1` serta `RIGDAILY_DEMO_SECRET`. Aplikasi memakai PGlite
+in-memory: schema dan data contoh dibuat otomatis pada request pertama, lalu
+hilang saat instance didaur ulang. Halaman login menampilkan tombol masuk cepat
+untuk tujuh peran, dan banner di dalam aplikasi menyediakan reset data.
+
+Data mode demo tidak permanen dan tidak dibagi antar instance. Jangan mengisi
+`DATABASE_URL` pada mode ini. Root Directory aplikasi adalah `apps/web` di
+dalam folder `rimbase-rebuild`, dan dua variabel di atas wajib diisi sebelum
+build pertama.
+
 ---
 
 ## Arsitektur

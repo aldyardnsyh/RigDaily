@@ -3,6 +3,7 @@ import { usePathname } from 'next/navigation';
 import { AppShell } from '@rigdaily/ui';
 import { useApi } from '@/lib/hooks/useApi';
 import { ROLES, type RoleId } from '@rigdaily/shared';
+import { DemoBanner } from './DemoBanner';
 import { UserMenu } from './UserMenu';
 import { ServerClock, WellSwitcher } from './TopbarControls';
 import { SyncBadge } from './SyncBadge';
@@ -48,7 +49,7 @@ function roleLabel(role: string | null | undefined): string | undefined {
   return ROLES[role as RoleId]?.label ?? role.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
-export function ShellNav({ children }: { children: React.ReactNode }) {
+export function ShellNav({ demo = false, children }: { demo?: boolean; children: React.ReactNode }) {
   const path = usePathname() ?? '/';
   // Data user nyata untuk topbar + dropdown profil. Bila gagal, AppShell memakai default.
   // Panaskan cache saat pengguna menyorot menu: pindah halaman terasa instan.
@@ -71,6 +72,7 @@ export function ShellNav({ children }: { children: React.ReactNode }) {
       clock={<ServerClock />}
       syncBadge={<SyncBadge />}
     >
+      {demo && <DemoBanner />}
       {children}
     </AppShell>
   );

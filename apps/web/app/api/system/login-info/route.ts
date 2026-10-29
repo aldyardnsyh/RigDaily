@@ -14,12 +14,16 @@ import { sql } from 'drizzle-orm';
 import { and, desc, eq, isNull } from 'drizzle-orm';
 import { db, schema } from '@rigdaily/database';
 import { ok } from '@/lib/api-response';
+import { ensureDemoReady, isDemoMode } from '@/lib/demo';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(): Promise<Response> {
   try {
+    // Instance Vercel baru: siapkan schema + data contoh sebelum membaca angka.
+    if (isDemoMode()) await ensureDemoReady();
+
     const companyRows = await db
       .select({ name: schema.companies.name, type: schema.companies.type })
       .from(schema.companies)
@@ -49,6 +53,7 @@ export async function GET(): Promise<Response> {
       .limit(5);
 
     return ok({
+      demo: isDemoMode(),
       organization: {
         name: companyRows[0]?.name ?? 'Instalasi RigDaily',
         type: companyRows[0]?.type ?? 'operator',
@@ -70,6 +75,7 @@ export async function GET(): Promise<Response> {
   } catch {
     // Jangan gagalkan halaman login bila master data belum siap.
     return ok({
+      demo: isDemoMode(),
       organization: { name: 'Instalasi RigDaily', type: 'operator' },
       counts: { rigs: 0, wells: 0, users: 0, reports: 0 },
       ready: false,

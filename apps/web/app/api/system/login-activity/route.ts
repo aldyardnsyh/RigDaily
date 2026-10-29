@@ -16,6 +16,7 @@ import { and, desc, eq, gte, isNull } from 'drizzle-orm';
 import { db, schema } from '@rigdaily/database';
 import { ok } from '@/lib/api-response';
 import { describeIp } from '@/lib/ip';
+import { ensureDemoReady, isDemoMode } from '@/lib/demo';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -43,6 +44,8 @@ function initials(name: string): string {
 
 export async function GET(): Promise<Response> {
   try {
+    if (isDemoMode()) await ensureDemoReady();
+
     const since = new Date(Date.now() - 7 * 24 * 3600 * 1000);
 
     const rows = await db

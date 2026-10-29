@@ -17,11 +17,12 @@ import { and, eq, isNull, sql } from 'drizzle-orm';
 import { db, schema, randomToken, sha256Hex, verifyPassword } from '@rigdaily/database';
 import { ROLE_IDS, can, type Permission, type RoleId } from '@rigdaily/shared';
 import { ApiError, getClientIp } from './api-response';
+import { isDemoMode, ensureDemoReady } from './demo';
+import { signDemoToken, verifyDemoToken } from './demo-auth';
+import { SESSION_COOKIE, SESSION_TTL_HOURS } from './session-constants';
 import { writeAudit } from '@/lib/repo';
 
-export const SESSION_COOKIE = 'rigdaily_session';
-/** Rig tour 8 jam (konservatif); user office juga 8 jam. */
-export const SESSION_TTL_HOURS = 8;
+export { SESSION_COOKIE, SESSION_TTL_HOURS };
 
 const SESSION_TTL_MS = SESSION_TTL_HOURS * 60 * 60 * 1000;
 
@@ -80,6 +81,11 @@ function cookieOptions(maxAgeSec: number) {
   };
 }
 
+async function setSessionCookie(token: string): Promise<void> {
+  const store = await cookieStore();
+  store.set(SESSION_COOKIE, token, cookieOptions(SESSION_TTL_HOURS * 3600));
+}
+
 /* ------------------------------------------------------------------ */
 /* Sesi                                                               */
 /* ------------------------------------------------------------------ */
@@ -104,10 +110,45 @@ export async function createSession(
     expiresAt,
   });
 
-  const store = await cookieStore();
-  store.set(SESSION_COOKIE, token, cookieOptions(SESSION_TTL_HOURS * 3600));
+  await setSessionCookie(token);
 
   return { token, expiresAt };
+}
+
+/**
+ * Mode demo: validasi JWT lalu petakan ke baris `users` instance ini.
+ * ID user sengaja TIDAK diambil dari token karena setiap instance PGlite
+ * menghasilkan UUID berbeda saat seed.
+ */
+async function getDemoSessionUser(token: string): Promise<SessionUser | null> {
+  const payload = await verifyDemoToken(token);
+  if (!payload) return null;
+
+  try {
+    await ensureDemoReady();
+  } catch {
+    return null;
+  }
+
+  const rows = await db
+    .select()
+    .from(schema.users)
+    .where(
+      and(
+        sql`lower(${schema.users.email}) = ${payload.email.trim().toLowerCase()}`,
+        isNull(schema.users.deletedAt),
+      ),
+    )
+    .limit(1);
+
+  const row = rows[0];
+  if (!row || !row.active) return null;
+
+  try {
+    return toSessionUser(row);
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -118,6 +159,9 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   const store = await cookieStore();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
+
+  // Demo publik: cookie berisi JWT stateless (bertahan lintas instance Vercel).
+  if (isDemoMode()) return getDemoSessionUser(token);
 
   const tokenHash = sha256Hex(token);
 
@@ -218,6 +262,9 @@ export async function login(
   password: string,
   meta?: { userAgent?: string; ip?: string },
 ): Promise<SessionUser> {
+  // Pastikan schema + data demo siap sebelum query pertama di instance baru.
+  if (isDemoMode()) await ensureDemoReady();
+
   const normalizedEmail = email.trim().toLowerCase();
 
   const rows = await db
@@ -239,7 +286,66 @@ export async function login(
 
   await db.update(schema.users).set({ lastLoginAt: new Date() }).where(eq(schema.users.id, row.id));
 
-  await createSession(row.id, meta);
+  if (isDemoMode()) {
+    // Sesi demo stateless: tetap valid walau request berikutnya mendarat di
+    // instance serverless lain yang punya database in-memory sendiri.
+    const token = await signDemoToken({
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      rigScope: user.rigScope,
+    });
+    await setSessionCookie(token);
+  } else {
+    await createSession(row.id, meta);
+  }
+
+  return user;
+}
+
+/**
+ * Masuk cepat mode demo (tanpa password) untuk akun yang ada di seed.
+ * Hanya aktif bila RIGDAILY_DEMO=1; di produksi normal selalu 404.
+ */
+export async function loginDemo(email: string): Promise<SessionUser> {
+  if (!isDemoMode()) {
+    throw new ApiError(404, 'DEMO_DISABLED', 'Mode demo tidak aktif pada instalasi ini.');
+  }
+
+  try {
+    await ensureDemoReady();
+  } catch {
+    throw new ApiError(503, 'DEMO_NOT_READY', 'Data demo belum siap. Coba lagi beberapa detik lagi.');
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const rows = await db
+    .select()
+    .from(schema.users)
+    .where(
+      and(
+        sql`lower(${schema.users.email}) = ${normalizedEmail}`,
+        isNull(schema.users.deletedAt),
+      ),
+    )
+    .limit(1);
+
+  const row = rows[0];
+  if (!row || !row.active) {
+    throw new ApiError(404, 'DEMO_ACCOUNT_NOT_FOUND', 'Akun demo tidak ditemukan pada instalasi ini.');
+  }
+
+  const user = toSessionUser(row);
+
+  await db.update(schema.users).set({ lastLoginAt: new Date() }).where(eq(schema.users.id, row.id));
+
+  const token = await signDemoToken({
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    rigScope: user.rigScope,
+  });
+  await setSessionCookie(token);
 
   return user;
 }

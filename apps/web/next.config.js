@@ -18,7 +18,17 @@ const nextConfig = {
     // Paket yang WAJIB di-resolve saat runtime (bukan di-bundle):
     // PGlite memuat WASM, pdfkit memuat file font/afm, pg butuh modul Node bawaan.
     serverComponentsExternalPackages: ['@electric-sql/pglite', 'pdfkit', 'pg', 'pg-native'],
-    ...(isStandalone ? { outputFileTracingRoot: repoRoot } : {}),
+    // Trace dari root monorepo supaya node_modules hoisted (PGlite WASM,
+    // data font PDF) ikut terbawa ke output serverless Vercel.
+    outputFileTracingRoot: repoRoot,
+    outputFileTracingIncludes: {
+      '/*': [
+        '../../node_modules/@electric-sql/pglite/**/*',
+        './node_modules/@electric-sql/pglite/**/*',
+        '../../node_modules/pdfkit/js/data/**/*',
+        './node_modules/pdfkit/js/data/**/*',
+      ],
+    },
   },
   webpack: (config, { isServer, nextRuntime }) => {
     if (isServer && nextRuntime === 'nodejs') {

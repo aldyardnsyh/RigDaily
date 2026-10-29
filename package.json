@@ -6,6 +6,9 @@
     "apps/*",
     "packages/*"
   ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "npm run dev --workspace=@rigdaily/web",
     "build": "npm run build --workspace=@rigdaily/web",

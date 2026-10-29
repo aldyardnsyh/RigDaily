@@ -24,6 +24,7 @@ import * as schema from './schema/index';
 export type Db = NodePgDatabase<typeof schema>;
 
 const usePglite = !process.env.DATABASE_URL || process.env.RIGDAILY_DRIVER === 'pglite';
+const demoMode = process.env.RIGDAILY_DEMO === '1' || process.env.RIGDAILY_DEMO === 'true';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -39,12 +40,15 @@ let poolInstance: Pool | null = null;
 let pgliteInstance: { close: () => Promise<void>; waitReady: Promise<void> } | null = null;
 
 if (usePglite) {
-  // PGlite dipakai untuk dev tanpa Docker & test suite.
+  // PGlite dipakai untuk dev tanpa Docker, test suite, dan MODE DEMO.
   // Guard: di produksi jangan pernah jatuh ke PGlite secara diam-diam.
-  if (process.env.NODE_ENV === 'production') {
+  // Demo publik (Vercel) memang sengaja memakai PGlite in-memory: data contoh
+  // dibuat ulang otomatis dan hilang saat instance didaur ulang.
+  if (process.env.NODE_ENV === 'production' && !demoMode) {
     throw new Error(
       '[database] DATABASE_URL kosong di NODE_ENV=production. ' +
         'Produksi WAJIB memakai PostgreSQL - PGlite akan kehilangan data saat container dibuat ulang. ' +
+        'Untuk demo tanpa database, set RIGDAILY_DEMO=1. ' +
         'Isi DATABASE_URL di .env (lihat .env.example).',
     );
   }
@@ -65,7 +69,7 @@ if (usePglite) {
   global.__rigdailyPglite = pgliteInstance;
   if (!process.env.DATABASE_URL) {
     console.warn(
-      '[database] DATABASE_URL kosong -> memakai PGlite (dev only). ' +
+      `[database] DATABASE_URL kosong -> memakai PGlite (${demoMode ? 'mode demo' : 'dev'}). ` +
         `Data: ${dataDir ?? 'in-memory'}. Jalankan "npm run db:migrate" lalu "npm run db:seed" bila tabel belum ada.`,
     );
   }

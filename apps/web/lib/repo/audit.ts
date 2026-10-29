@@ -19,6 +19,18 @@ function toJsonRecord(value: unknown): Record<string, unknown> | null {
   return { value };
 }
 
+/**
+ * Batasi panjang teks sesuai kolom varchar di schema.
+ *
+ * User-Agent browser modern mudah melewati 120 karakter. Tanpa pemotongan,
+ * INSERT audit gagal (`value too long for type character varying(120)`) dan
+ * jejak audit hilang justru pada peristiwa yang paling perlu dicatat.
+ */
+function clip(value: string | null | undefined, max: number): string | null {
+  if (value === null || value === undefined) return null;
+  return value.slice(0, max);
+}
+
 export async function writeAudit(entry: {
   entity: string;
   entityId?: string | null;
@@ -32,15 +44,15 @@ export async function writeAudit(entry: {
 }): Promise<void> {
   try {
     await db.insert(schema.auditLog).values({
-      entity: entry.entity,
-      entityId: entry.entityId ?? null,
+      entity: clip(entry.entity, 60) as string,
+      entityId: clip(entry.entityId, 80),
       actorId: entry.actorId ?? null,
-      actorName: entry.actorName ?? null,
-      action: entry.action,
+      actorName: clip(entry.actorName, 200),
+      action: clip(entry.action, 60) as string,
       oldJson: toJsonRecord(entry.oldJson),
       newJson: toJsonRecord(entry.newJson),
-      ip: entry.ip ?? null,
-      terminal: entry.terminal ?? null,
+      ip: clip(entry.ip, 60),
+      terminal: clip(entry.terminal, 120),
     });
   } catch (err) {
     console.error('[repo/audit] gagal menulis audit log:', err);

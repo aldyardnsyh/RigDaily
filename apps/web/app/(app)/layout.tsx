@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { clearSessionCookie, getSessionUser } from '@/lib/auth';
+import { isDemoMode } from '@/lib/demo';
 import { ShellNav } from '../../components/ShellNav';
 
 /**
@@ -22,6 +23,8 @@ import { ShellNav } from '../../components/ShellNav';
  *  3. halaman login tetap bisa dibuka (middleware tidak memblokir /login).
  */
 export const dynamic = 'force-dynamic';
+/** Bootstrap PGlite + seed butuh beberapa detik pada cold start. */
+export const maxDuration = 60;
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser();
@@ -47,5 +50,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     redirect(`/login?next=${encodeURIComponent(next)}&expired=1`);
   }
 
-  return <ShellNav>{children}</ShellNav>;
+  return (
+    <ShellNav demo={isDemoMode()}>
+      {children}
+    </ShellNav>
+  );
 }

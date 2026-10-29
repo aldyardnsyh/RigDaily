@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ArrowRight, Check, CircleHelp, Download, Info, LockKeyhole, Monitor, RefreshCw } from 'lucide-react';
+import { DEMO_ACCOUNTS, DEMO_PASSWORD, ROLES, type DemoAccount } from '@rigdaily/shared';
 import { toast } from 'sonner';
 import { ApiClientError, apiSend } from '@/lib/api-client';
 import { useLocalIp } from '@/lib/hooks/useLocalIp';
@@ -33,6 +34,7 @@ type LoginInfo = {
   organization: { name: string; type: string };
   counts: { rigs: number; wells: number; users: number; reports: number };
   ready: boolean;
+  demo: boolean;
   devices: LoginDevice[];
 };
 type SystemContext = {
@@ -50,12 +52,6 @@ type SystemContext = {
 };
 
 type LoginResponse = { user: { name: string; email: string }; expiresAt: string };
-
-
-
-const DEMO_EMAIL = 'admin@rigdaily.local';
-const DEMO_PASSWORD = 'rigdaily123';
-const SHOW_DEMO_HINT = process.env.NODE_ENV !== 'production';
 
 function RigMark({ small = false }: { small?: boolean }) {
   return <span className={small ? 'auth-mark auth-mark-small' : 'auth-mark'} aria-hidden>$</span>;
@@ -91,9 +87,11 @@ function LoginForm() {
    */
   const reason = params?.get('expired')
     ? ('expired' as const)
-    : params?.get('loggedOut')
-      ? ('loggedOut' as const)
-      : null;
+    : params?.get('reset')
+      ? ('reset' as const)
+      : params?.get('loggedOut')
+        ? ('loggedOut' as const)
+        : null;
 
   /*
    * Bersihkan cache data di memori setiap kali halaman login dibuka.
@@ -116,6 +114,7 @@ function LoginForm() {
   const [pass, setPass] = useState('');
   const [keep, setKeep] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [demoBusy, setDemoBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [clock, setClock] = useState('--:--:--');
   const [syncStatus, setSyncStatus] = useState('Menunggu masuk');
@@ -188,7 +187,7 @@ function LoginForm() {
 
   async function signIn(event: React.FormEvent) {
     event.preventDefault();
-    if (busy) return;
+    if (busy || demoBusy) return;
 
     const trimmedEmail = email.trim();
     if (!trimmedEmail.includes('@')) {
@@ -227,10 +226,38 @@ function LoginForm() {
     }
   }
 
-  function useDemoCredentials() {
-    setEmail(DEMO_EMAIL);
+  function fillDemoCredentials() {
+    const admin = DEMO_ACCOUNTS.find((account) => account.role === 'Admin') ?? DEMO_ACCOUNTS[0];
+    setEmail(admin.email);
     setPass(DEMO_PASSWORD);
     setErr(null);
+  }
+
+  /**
+   * Masuk cepat mode demo. Server membuat sesi JWT tanpa password; tombol ini
+   * hanya muncul saat /api/system/login-info melaporkan `demo: true`.
+   */
+  async function demoSignIn(account: DemoAccount) {
+    if (busy || demoBusy) return;
+    setErr(null);
+    setDemoBusy(account.email);
+    try {
+      await apiSend<LoginResponse>('/api/auth/demo-login', 'POST', { email: account.email });
+      try {
+        localStorage.setItem('rigdaily.keep', '1');
+      } catch {
+        /* storage bisa diblokir browser - tidak fatal. */
+      }
+      toast.success(`Masuk sebagai ${ROLES[account.role].label}. Mengalihkan...`);
+      window.location.assign(next);
+    } catch (cause) {
+      if (cause instanceof ApiClientError) {
+        setErr(cause.status === 404 ? 'Akun demo tidak tersedia di instalasi ini.' : cause.message);
+      } else {
+        setErr('Tidak dapat menghubungi server. Periksa koneksi lalu coba lagi.');
+      }
+      setDemoBusy(null);
+    }
   }
 
   function syncNow() {
@@ -376,13 +403,40 @@ function LoginForm() {
                 <span>Tetap masuk di stasiun ini selama shift 12 jam</span>
               </label>
 
-              {SHOW_DEMO_HINT && (
-                <p className="auth-status-detail" style={{ margin: 0 }}>
-                  Demo: <strong>{DEMO_EMAIL}</strong> / <strong>{DEMO_PASSWORD}</strong>{' '}
-                  <button type="button" className="auth-link" onClick={useDemoCredentials}>
-                    Isi otomatis
-                  </button>
-                </p>
+              {loginInfo?.demo && (
+                <section className="auth-demo" aria-labelledby="demo-title">
+                  <div className="auth-demo-head">
+                    <strong id="demo-title">MASUK CEPAT DEMO</strong>
+                    <span className="tnum">TANPA KATA SANDI</span>
+                  </div>
+                  <p className="auth-demo-note">
+                    Data contoh sudah terisi. Pilih peran untuk melihat menu dan hak aksesnya.
+                  </p>
+                  <div className="auth-demo-grid">
+                    {DEMO_ACCOUNTS.map((account) => (
+                      <button
+                        key={account.email}
+                        type="button"
+                        className="auth-demo-item"
+                        onClick={() => demoSignIn(account)}
+                        disabled={busy || demoBusy !== null}
+                        aria-busy={demoBusy === account.email}
+                        title={account.focus}
+                      >
+                        <span className="auth-demo-role">{ROLES[account.role].label}</span>
+                        <span className="auth-demo-name">
+                          {demoBusy === account.email ? 'Menyiapkan...' : account.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="auth-status-detail" style={{ margin: 0 }}>
+                    Login manual: <strong>admin@rigdaily.local</strong> / <strong>{DEMO_PASSWORD}</strong>{' '}
+                    <button type="button" className="auth-link" onClick={fillDemoCredentials}>
+                      Isi otomatis
+                    </button>
+                  </p>
+                </section>
               )}
 
               {err && (
@@ -398,12 +452,14 @@ function LoginForm() {
                   <span>
                     {reason === 'expired'
                       ? 'Sesi Anda berakhir atau tidak valid lagi. Silakan masuk kembali untuk melanjutkan.'
-                      : 'Anda telah keluar. Terima kasih, dan sampai jumpa di shift berikutnya.'}
+                      : reason === 'reset'
+                        ? 'Data demo telah direset ke kondisi awal. Silakan masuk lagi dengan salah satu akun demo.'
+                        : 'Anda telah keluar. Terima kasih, dan sampai jumpa di shift berikutnya.'}
                   </span>
                 </p>
               )}
 
-              <button className="auth-primary" type="submit" disabled={busy} aria-busy={busy}>
+              <button className="auth-primary" type="submit" disabled={busy || demoBusy !== null} aria-busy={busy}>
                 {busy ? (
                   'Sedang masuk...'
                 ) : (
