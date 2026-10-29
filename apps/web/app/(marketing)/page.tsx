@@ -11,7 +11,6 @@ import './landing.css';
  * (lihat app/robots.ts dan app/sitemap.ts). Metadata di bawah melengkapi
  * metadata global dari root layout dengan judul dan deskripsi khusus halaman
  * depan, supaya hasil pencarian menampilkan ringkasan yang menjual.
- */
  *
  * Aturan halaman ini:
  *  - Halaman pertama yang dimuat saat membuka domain. Tidak memerlukan sesi.
