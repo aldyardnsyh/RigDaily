@@ -3,7 +3,11 @@
 # default Electron (build tidak gagal).
 appId: com.rigdaily.internal
 productName: RigDaily Internal
-copyright: RigDaily Internal
+copyright: PogungSoftwareHouseTeam (PSHT)
+# Versi Electron dipin eksplisit karena npm workspaces meletakkan modul
+# electron di root node_modules, sehingga electron-builder tidak bisa
+# menghitung versinya dari folder apps/desktop.
+electronVersion: 31.7.7
 
 directories:
   output: release
@@ -32,6 +36,7 @@ win:
 nsis:
   oneClick: false
   perMachine: true
+  guid: 8a4b2c1d-3e5f-4a6b-8c7d-9e0f1a2b3c4d
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true

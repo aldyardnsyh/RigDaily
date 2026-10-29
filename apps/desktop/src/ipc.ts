@@ -253,17 +253,11 @@ export function registerIpcHandlers(ctx: IpcContext): void {
     try {
       const config = loadConfig();
       const win = getWindow();
-      const result = win
-        ? await dialog.showSaveDialog(win, {
-            title: 'Export backup bundle RigDaily',
-            defaultPath: join(app.getPath('documents'), defaultBackupFileName()),
-            filters: [{ name: 'RigDaily backup bundle', extensions: ['json.gz', 'gz'] }],
-          })
-        : await dialog.showSaveDialog({
-            title: 'Export backup bundle RigDaily',
-            defaultPath: join(app.getPath('documents'), defaultBackupFileName()),
-            filters: [{ name: 'RigDaily backup bundle', extensions: ['json.gz', 'gz'] }],
-          });
+      const result = await dialog.showSaveDialog(getWindow() ?? undefined as never, {
+        title: 'Export backup bundle RigDaily',
+        defaultPath: join(app.getPath('documents'), defaultBackupFileName()),
+        filters: [{ name: 'RigDaily backup bundle', extensions: ['json.gz', 'gz'] }],
+      });
       if (result.canceled || !result.filePath) return { path: null, bytes: 0 };
 
       const written = exportBackupZip(result.filePath, config);
@@ -276,17 +270,11 @@ export function registerIpcHandlers(ctx: IpcContext): void {
   ipcMain.handle('backup:import', async (): Promise<BackupImportResult | null> => {
     try {
       const win = getWindow();
-      const result = win
-        ? await dialog.showOpenDialog(win, {
-            title: 'Import backup bundle RigDaily',
-            properties: ['openFile'],
-            filters: [{ name: 'RigDaily backup bundle', extensions: ['gz', 'json', 'rigdaily-backup'] }],
-          })
-        : await dialog.showOpenDialog({
-            title: 'Import backup bundle RigDaily',
-            properties: ['openFile'],
-            filters: [{ name: 'RigDaily backup bundle', extensions: ['gz', 'json', 'rigdaily-backup'] }],
-          });
+      const result = await dialog.showOpenDialog(getWindow() ?? undefined as never, {
+        title: 'Import backup bundle RigDaily',
+        properties: ['openFile'],
+        filters: [{ name: 'RigDaily backup bundle', extensions: ['gz', 'json', 'rigdaily-backup'] }],
+      });
       const path = result.filePaths[0];
       if (result.canceled || !path) return null;
 

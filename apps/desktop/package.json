@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "RigDaily Internal — terminal DDR rig (offline-first, Electron + SQLite).",
+  "author": "PogungSoftwareHouseTeam (PSHT)",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -11,13 +12,17 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "electron": "^31.0.0",
+    "@types/node": "20.12.0",
+    "electron": "31.7.7",
     "electron-builder": "^24.13.3",
-    "typescript": "5.5.4",
-    "@types/node": "20.12.0"
+    "electron-rebuild": "^3.2.9",
+    "typescript": "5.5.4"
   },
   "dependencies": {
-    "better-sqlite3": "^11.0.0",
-    "@rigdaily/shared": "0.1.0"
+    "@rigdaily/shared": "0.1.0",
+    "7zip-bin": "^5.2.0",
+    "app-builder-bin": "^4.0.0",
+    "app-builder-lib": "^24.13.3",
+    "better-sqlite3": "^11.0.0"
   }
 }

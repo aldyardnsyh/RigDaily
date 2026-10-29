@@ -226,7 +226,7 @@ function encodeIco(entries) {
 mkdirSync(join(WEB, 'public'), { recursive: true });
 
 // favicon.ico: 16/32/48 sekaligus, supaya tajam di tab, bookmark, dan taskbar.
-const icoSizes = [16, 32, 48];
+const icoSizes = [16, 32, 48, 256];
 writeFileSync(
   join(WEB, 'app', 'favicon.ico'),
   encodeIco(icoSizes.map((size) => ({ size, png: encodePng(size, render(size)) }))),
