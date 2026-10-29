@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { cn } from '../lib/cn';
 import { BrandMark } from './brand-mark';
@@ -14,7 +14,6 @@ import {
   FileText,
   FlaskConical,
   Gauge,
-  HardHat,
   LayoutDashboard,
   Layers,
   Menu,
@@ -445,7 +444,7 @@ export function AppShell({
               className="flex h-[var(--control-h)] items-center gap-2 rounded-[var(--radius-input)] border border-[var(--border-default)] bg-white px-3 text-[13px] font-semibold"
               aria-label="Ganti wellbore"
             >
-              <HardHat size={16} aria-hidden />
+              <BrandMark size={16} />
               <span className="well-value">
                 <span className="text-[var(--text-muted)]">SUMUR:</span> {well}
               </span>

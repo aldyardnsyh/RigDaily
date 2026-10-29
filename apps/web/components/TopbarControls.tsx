@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, ChevronDown, Clock, HardHat, WifiOff } from 'lucide-react';
+import { CalendarDays, ChevronDown, Clock, WifiOff } from 'lucide-react';
+import { BrandMark } from '@rigdaily/ui';
 import type { WellDto } from '@/lib/repo/types';
 import { useApi } from '@/lib/hooks/useApi';
 import { useActiveWell, useRequestedWellId, useSelectWell } from '@/lib/hooks/useActiveWell';
@@ -247,7 +248,7 @@ export function WellSwitcher() {
           minWidth: 0,
         }}
       >
-        <HardHat size={16} aria-hidden style={{ flex: '0 0 auto', color: 'var(--accent-teal)' }} />
+        <BrandMark size={16} />
         <span
           style={{
             minWidth: 0,
