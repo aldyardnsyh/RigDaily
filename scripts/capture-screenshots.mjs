@@ -1,9 +1,14 @@
 /**
  * Ambil screenshot seluruh halaman untuk dokumentasi README.
  *
- * Menjalankan Next.js production server sebagai child process, login lewat
- * API untuk memperoleh cookie sesi, menyuntikkan cookie ke agent-browser,
- * lalu memotret setiap halaman dalam ukuran 1440x900 (viewport desktop).
+ * Menjalankan Next.js production server sebagai child process. Halaman login
+ * dipotret lebih dulu TANPA cookie sesi (kalau cookie sudah dipasang, /login
+ * otomatis dialihkan ke dashboard dan hasilnya salah). Setelah itu login lewat
+ * API untuk memperoleh cookie sesi, menyuntikkan cookie ke agent-browser, lalu
+ * memotret setiap halaman dalam ukuran 1440x900 (viewport desktop).
+ *
+ * Halaman Well File dipotret dua kali: tab Ringkasan (default) dan tab Skema
+ * Lubang Bor yang memuat animasi pengeboran.
  *
  * Jalankan: node scripts/capture-screenshots.mjs
  */
@@ -15,9 +20,8 @@ const PORT = 3430;
 const BASE = `http://127.0.0.1:${PORT}`;
 const OUT = 'docs/screenshots';
 
-/** [path, nama file, deskripsi singkat] */
+/** [path, nama file, deskripsi singkat] — halaman yang butuh sesi login. */
 const PAGES = [
-  ['/login', '01-login', 'Halaman masuk: deteksi IP, waktu server, log aktivitas'],
   ['/dashboard', '02-dashboard', 'Dashboard eksekutif: KPI, tren kedalaman, komposisi waktu'],
   ['/ddr', '03-ddr', 'Daily Drilling Report: form 24 jam dengan validasi'],
   ['/time', '04-time-breakdown', 'Time Breakdown: grid IADC dan rekonsiliasi 24 jam'],
@@ -86,7 +90,22 @@ try {
   }
   console.log(`server siap di ${BASE}`);
 
-  // Login lewat API untuk mendapat cookie sesi.
+  // 1) Halaman masuk TANPA sesi: buka sesi browser kosong, bersihkan cookie,
+  //    baru buka /login supaya tidak dialihkan ke dashboard.
+  ab(['open']);
+  ab(['cookies', 'clear']);
+  ab(['set', 'viewport', '1440', '900', '1']);
+  ab(['open', `${BASE}/login`]);
+  try {
+    ab(['wait', '--load', 'networkidle']);
+  } catch {
+    /* abaikan: halaman login punya polling status */
+  }
+  await sleep(2000);
+  ab(['screenshot', '--full', `${OUT}/01-login.png`]);
+  console.log(`OK    ${'01-login'.padEnd(22)} /login  (Halaman masuk: stasiun, telemetri, status sinkronisasi)`);
+
+  // 2) Login lewat API untuk mendapat cookie sesi.
   const login = await fetch(`${BASE}/api/auth/login`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -106,7 +125,10 @@ try {
   ab(['cookies', 'set', 'rigdaily_session', token, '--url', `${BASE}/`]);
   ab(['set', 'viewport', '1440', '900', '1']);
 
-  let ok = 0;
+  // Login sudah tersimpan di langkah 1.
+  let ok = 1;
+  const total = PAGES.length + 2; // login + halaman ber-sesi + skema lubang bor
+
   for (const [path, name, desc] of PAGES) {
     try {
       ab(['open', `${BASE}${path}`]);
@@ -127,8 +149,27 @@ try {
     }
   }
 
-  console.log(`\n${ok}/${PAGES.length} screenshot tersimpan di ${OUT}`);
-  process.exitCode = ok === PAGES.length ? 0 : 1;
+  // 3) Well File tab Skema Lubang Bor: animasi pengeboran.
+  try {
+    ab(['open', `${BASE}/well-file`]);
+    try {
+      ab(['wait', '--load', 'networkidle']);
+    } catch {
+      /* abaikan */
+    }
+    await sleep(1500);
+    ab(['find', 'role', 'tab', 'click', '--name', 'Skema Lubang Bor']);
+    await sleep(2600); // biarkan animasi bergerak sebelum dipotret
+    ab(['screenshot', '--full', `${OUT}/08b-well-file-schema.png`]);
+    console.log(`OK    ${'08b-well-file-schema'.padEnd(22)} /well-file#schema  (Animasi pengeboran: derrick, drill string, casing)`);
+    ok += 1;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message.split('\n')[0] : String(e);
+    console.log(`GAGAL ${'08b-well-file-schema'.padEnd(22)} /well-file#schema -> ${msg}`);
+  }
+
+  console.log(`\n${ok}/${total} screenshot tersimpan di ${OUT}`);
+  process.exitCode = ok === total ? 0 : 1;
 } catch (e) {
   console.error('ERROR:', e.message);
   process.exitCode = 1;
