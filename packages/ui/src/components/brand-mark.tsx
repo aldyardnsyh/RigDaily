@@ -10,8 +10,8 @@
  * (faktor 64/24) supaya proporsinya tetap sama di semua ukuran.
  */
 
-const NAVY = 'var(--bg-sidebar)';
-const TEAL = 'var(--accent-teal)';
+const NAVY = 'var(--accent-teal)';
+const TEAL = '#FFFFFF';
 
 export function BrandMark({
   size = 32,

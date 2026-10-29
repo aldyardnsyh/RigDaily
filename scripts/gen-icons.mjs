@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Generator ikon RigDaily.
  *
  * Bentuk marka: HELM PROYEK (hard hat) di atas kotak navy. Geometri di sini
@@ -19,8 +19,8 @@ import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const WEB = join(HERE, '..', 'apps', 'web');
 
-const NAVY = [0x0f, 0x2a, 0x44];
-const TEAL = [0x0e, 0x9f, 0x8a];
+const NAVY = [0x00, 0x6B, 0x5C];
+const TEAL = [0xff, 0xff, 0xff];
 
 const BG_R = 12; // sudut membulat ikon
 const STROKE = 5.33; // 2 pada grid 24, diskalakan 64/24

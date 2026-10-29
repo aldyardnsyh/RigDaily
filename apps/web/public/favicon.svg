@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="RigDaily">
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="RigDaily">
   <title>RigDaily</title>
   <!-- Dasar: kotak navy sesuai token --bg-sidebar -->
-  <rect width="64" height="64" rx="12" fill="#0F2A44" />
+  <rect width="64" height="64" rx="12" fill="#006B5C" />
 
   <!-- Helm proyek: aksen teal sesuai token --accent-teal.
        Digambar pada grid 24 lalu diskalakan 64/24 agar proporsinya sama
        dengan komponen BrandMark di aplikasi. -->
-  <g transform="scale(2.6667)" fill="none" stroke="#0E9F8A" stroke-width="2"
+  <g transform="scale(2.6667)" fill="none" stroke="#FFFFFF" stroke-width="2"
      stroke-linecap="round" stroke-linejoin="round">
     <path d="M4 15v-3a6 6 0 0 1 6-6" />
     <path d="M14 6a6 6 0 0 1 6 6v3" />
@@ -14,5 +14,5 @@
   </g>
 
   <!-- Rim bawah helm, diisi agar tetap terbaca di ukuran 16px -->
-  <rect x="5.33" y="40" width="53.33" height="8" rx="2.67" fill="#0E9F8A" />
+  <rect x="5.33" y="40" width="53.33" height="8" rx="2.67" fill="#FFFFFF" />
 </svg>
