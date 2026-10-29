@@ -1,32 +1,21 @@
-/**
+﻿/**
  * BrandMark - SATU-SATUNYA marka RigDaily.
  *
- * KENAPA FILE INI ADA
- * Sebelumnya marka dibuat ulang di tiga tempat dengan hasil berbeda:
- *   - sidebar/dashboard : ikon helm dari pustaka Lucide, kotak teal
- *   - halaman login     : karakter "$" di kotak navy
- *   - landing page      : derrick SVG di kotak navy
- *   - favicon           : derrick SVG di kotak navy
- * Akibatnya ikon di tab browser tidak sama dengan ikon di dalam aplikasi.
+ * Bentuk: HELM PROYEK (hard hat) di atas kotak navy, sesuai permintaan.
+ * Bentuk ini dipakai di semua tempat: sidebar dashboard, topbar, halaman login,
+ * landing page, favicon, dan ikon PWA. `scripts/gen-icons.mjs` menghasilkan
+ * favicon/PNG dari geometri yang sama, jadi tidak ada lagi marka yang berbeda.
  *
- * Sekarang semua tempat memakai komponen ini, dan `scripts/gen-icons.mjs`
- * menghasilkan favicon/PNG dari geometri yang sama. Satu bentuk, satu warna.
- *
- * Ukuran: atribut `width`/`height` adalah nilai bawaan. CSS boleh menimpanya
- * (mis. marka login yang mengecil di layar pendek), karena atribut presentasi
- * SVG kalah oleh aturan CSS. `border-radius` memakai persen agar selalu
- * proporsional terhadap ukuran berapa pun.
+ * Geometri mengikuti gambar helm 24x24 lalu diskalakan ke viewBox 64x64
+ * (faktor 64/24) supaya proporsinya tetap sama di semua ukuran.
  */
 
 const NAVY = 'var(--bg-sidebar)';
 const TEAL = 'var(--accent-teal)';
-const AMBER = 'var(--chart-3)';
-const BASE = 'var(--bg-surface)';
-const LEG = 'var(--text-muted)';
 
 export function BrandMark({
   size = 32,
-  /** Di atas latar navy (sidebar): beri garis tepi tipis agar bentuknya terbaca. */
+  /** Di atas latar navy (sidebar): garis tepi tipis agar bentuk terbaca. */
   onDark = false,
   className,
 }: {
@@ -45,22 +34,28 @@ export function BrandMark({
       style={{
         display: 'block',
         flex: '0 0 auto',
-        // 12/64 = 18.75%: sudut membulat ikon, tetap proporsional di ukuran apa pun.
+        // 12/64 = 18.75%: sudut membulat, tetap proporsional di ukuran apa pun.
         borderRadius: '18.75%',
         ...(onDark ? { boxShadow: 'inset 0 0 0 1.5px rgba(255, 255, 255, 0.24)' } : null),
       }}
     >
       <rect width="64" height="64" rx="12" fill={NAVY} />
-      <g stroke={TEAL} strokeWidth="2.2" strokeLinecap="round" fill="none">
-        <line x1="20" y1="50" x2="32" y2="16" />
-        <line x1="44" y1="50" x2="32" y2="16" />
-        <line x1="24" y1="39" x2="40" y2="39" />
-        <line x1="27" y1="30" x2="37" y2="30" />
+      <g
+        transform="scale(2.6667)"
+        fill="none"
+        stroke={TEAL}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {/* Kubah helm */}
+        <path d="M4 15v-3a6 6 0 0 1 6-6" />
+        <path d="M14 6a6 6 0 0 1 6 6v3" />
+        {/* Tonjolan atas */}
+        <path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5" />
       </g>
-      <rect x="29" y="13" width="6" height="3" rx="1" fill={AMBER} />
-      <rect x="18" y="50" width="28" height="3" rx="1.5" fill={BASE} />
-      <rect x="22" y="53" width="4" height="5" fill={LEG} />
-      <rect x="38" y="53" width="4" height="5" fill={LEG} />
+      {/* Rim bawah: diisi, bukan digaris, agar helm tetap terbaca di ukuran 16px. */}
+      <rect x="5.33" y="40" width="53.33" height="8" rx="2.67" fill={TEAL} />
     </svg>
   );
 }

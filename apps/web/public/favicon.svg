@@ -3,19 +3,16 @@
   <!-- Dasar: kotak navy sesuai token --bg-sidebar -->
   <rect width="64" height="64" rx="12" fill="#0F2A44" />
 
-  <!-- Derrick: dua kaki menyilang, aksen teal sesuai token --accent-teal -->
-  <g stroke="#0E9F8A" stroke-width="2.2" stroke-linecap="round" fill="none">
-    <line x1="20" y1="50" x2="32" y2="16" />
-    <line x1="44" y1="50" x2="32" y2="16" />
-    <line x1="24" y1="39" x2="40" y2="39" />
-    <line x1="27" y1="30" x2="37" y2="30" />
+  <!-- Helm proyek: aksen teal sesuai token --accent-teal.
+       Digambar pada grid 24 lalu diskalakan 64/24 agar proporsinya sama
+       dengan komponen BrandMark di aplikasi. -->
+  <g transform="scale(2.6667)" fill="none" stroke="#0E9F8A" stroke-width="2"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 15v-3a6 6 0 0 1 6-6" />
+    <path d="M14 6a6 6 0 0 1 6 6v3" />
+    <path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5" />
   </g>
 
-  <!-- Crown block -->
-  <rect x="29" y="13" width="6" height="3" rx="1" fill="#F59E0B" />
-
-  <!-- Dasar rig -->
-  <rect x="18" y="50" width="28" height="3" rx="1.5" fill="#FFFFFF" />
-  <rect x="22" y="53" width="4" height="5" fill="#64748B" />
-  <rect x="38" y="53" width="4" height="5" fill="#64748B" />
+  <!-- Rim bawah helm, diisi agar tetap terbaca di ukuran 16px -->
+  <rect x="5.33" y="40" width="53.33" height="8" rx="2.67" fill="#0E9F8A" />
 </svg>

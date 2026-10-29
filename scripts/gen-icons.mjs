@@ -1,15 +1,15 @@
 /**
  * Generator ikon RigDaily.
  *
- * Kenapa dibuat sendiri, bukan pakai rasterizer eksternal:
- *  - Ikon aplikasi sudah ada sebagai SVG (app/icon.svg). Yang dibutuhkan hanya
- *    turunannya: favicon.ico (16/32/48) dan PNG 192/512 untuk manifest PWA.
- *  - Browser lama dan Android meminta /favicon.ico dan PNG; SVG saja tidak cukup.
- *  - Tanpa dependensi: PNG ditulis manual dengan zlib bawaan Node, ICO dibungkus
- *    dari PNG (format ICO mendukung PNG tertanam). Hasilnya deterministik dan
- *    bisa dijalankan ulang kapan saja tanpa unduhan.
+ * Bentuk marka: HELM PROYEK (hard hat) di atas kotak navy. Geometri di sini
+ * harus sama dengan `packages/ui/src/components/brand-mark.tsx` dan
+ * `apps/web/app/icon.svg`, supaya ikon di tab browser, ikon PWA, dan marka di
+ * dalam aplikasi tidak pernah berbeda lagi.
  *
- * Geometri mengikuti app/icon.svg (viewBox 64x64) supaya semua ukuran identik.
+ * Kenapa dibuat sendiri, bukan pakai rasterizer eksternal:
+ *  - Tanpa dependensi. PNG ditulis manual dengan zlib bawaan Node, ICO dibungkus
+ *    dari PNG (format ICO mendukung PNG tertanam).
+ *  - Deterministik dan bisa dijalankan ulang kapan saja tanpa unduhan.
  */
 import { deflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -21,12 +21,9 @@ const WEB = join(HERE, '..', 'apps', 'web');
 
 const NAVY = [0x0f, 0x2a, 0x44];
 const TEAL = [0x0e, 0x9f, 0x8a];
-const AMBER = [0xf5, 0x9e, 0x0b];
-const WHITE = [0xff, 0xff, 0xff];
-const GRAY = [0x64, 0x74, 0x8b];
 
 const BG_R = 12; // sudut membulat ikon
-const STROKE = 2.2;
+const STROKE = 5.33; // 2 pada grid 24, diskalakan 64/24
 
 /** Jarak titik ke segmen garis. */
 function distToSegment(px, py, x1, y1, x2, y2) {
@@ -35,9 +32,7 @@ function distToSegment(px, py, x1, y1, x2, y2) {
   const len2 = dx * dx + dy * dy;
   let t = len2 === 0 ? 0 : ((px - x1) * dx + (py - y1) * dy) / len2;
   t = Math.max(0, Math.min(1, t));
-  const cx = x1 + t * dx;
-  const cy = y1 + t * dy;
-  return Math.hypot(px - cx, py - cy);
+  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
 }
 
 /** Titik di dalam persegi membulat. */
@@ -48,21 +43,52 @@ function inRoundRect(px, py, x, y, w, h, r) {
   return Math.hypot(px - cx, py - cy) <= r;
 }
 
-const DERRICK = [
-  [20, 50, 32, 16],
-  [44, 50, 32, 16],
-  [24, 39, 40, 39],
-  [27, 30, 37, 30],
+/** Busur lingkaran jadi rangkaian titik. */
+function arc(cx, cy, r, fromDeg, toDeg, steps = 28) {
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    const a = ((fromDeg + ((toDeg - fromDeg) * i) / steps) * Math.PI) / 180;
+    pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+  }
+  return pts;
+}
+
+/* --- Geometri helm pada grid 64x64 (24 x 2.6667) --- */
+const S = 64 / 24;
+const HAT_LINES = [
+  // kaki kiri kubah
+  [
+    [4 * S, 12 * S],
+    [4 * S, 15 * S],
+  ],
+  // kaki kanan kubah
+  [
+    [20 * S, 12 * S],
+    [20 * S, 15 * S],
+  ],
+  // busur kiri: pusat (10,12) r6, 180 -> 270
+  arc(10 * S, 12 * S, 6 * S, 180, 270),
+  // busur kanan: pusat (14,12) r6, 270 -> 360
+  arc(14 * S, 12 * S, 6 * S, 270, 360),
+  // tonjolan atas
+  [
+    [10 * S, 10 * S],
+    [10 * S, 5 * S],
+    [13 * S, 5 * S],
+    [13 * S, 10 * S],
+  ],
 ];
+const BRIM = { x: 5.33, y: 40, w: 53.33, h: 8, r: 2.67 };
 
 /** Warna paling atas pada satu titik (koordinat viewBox 0..64), atau null. */
 function colorAt(px, py) {
-  // Urutan tumpuk: leg, base, crown, derrick, latar (paling atas lebih dulu).
-  if (inRoundRect(px, py, 22, 53, 4, 5, 0) || inRoundRect(px, py, 38, 53, 4, 5, 0)) return GRAY;
-  if (inRoundRect(px, py, 18, 50, 28, 3, 1.5)) return WHITE;
-  if (inRoundRect(px, py, 29, 13, 6, 3, 1)) return AMBER;
-  for (const [x1, y1, x2, y2] of DERRICK) {
-    if (distToSegment(px, py, x1, y1, x2, y2) <= STROKE / 2) return TEAL;
+  if (inRoundRect(px, py, BRIM.x, BRIM.y, BRIM.w, BRIM.h, BRIM.r)) return TEAL;
+  for (const line of HAT_LINES) {
+    for (let i = 0; i < line.length - 1; i++) {
+      const [x1, y1] = line[i];
+      const [x2, y2] = line[i + 1];
+      if (distToSegment(px, py, x1, y1, x2, y2) <= STROKE / 2) return TEAL;
+    }
   }
   if (inRoundRect(px, py, 0, 0, 64, 64, BG_R)) return NAVY;
   return null;
@@ -89,7 +115,6 @@ function render(size, artScale = 1, fullBleed = false) {
         for (let sx = 0; sx < SS; sx++) {
           const ux = ((x + (sx + 0.5) / SS) / size) * 64;
           const uy = ((y + (sy + 0.5) / SS) / size) * 64;
-          // Petakan ke koordinat seni (memperhitungkan skala + tengah).
           const ax = (ux - off) / artScale;
           const ay = (uy - off) / artScale;
           let c = colorAt(ax, ay);
@@ -105,7 +130,6 @@ function render(size, artScale = 1, fullBleed = false) {
       const n = SS * SS;
       const i = (y * size + x) * 4;
       if (a > 0) {
-        // Warna dirata-rata hanya dari sampel yang tertutup (hindari gelap di tepi).
         const covered = a / 255;
         out[i] = Math.round(r / covered);
         out[i + 1] = Math.round(g / covered);
@@ -155,11 +179,10 @@ function encodePng(size, rgba) {
   ihdr[11] = 0;
   ihdr[12] = 0;
 
-  // Baris PNG diawali filter byte 0.
   const stride = size * 4;
   const raw = Buffer.alloc((stride + 1) * size);
   for (let y = 0; y < size; y++) {
-    raw[y * (stride + 1)] = 0;
+    raw[y * (stride + 1)] = 0; // filter none
     rgba.copy(raw, y * (stride + 1) + 1, y * stride, y * stride + stride);
   }
 
@@ -186,7 +209,7 @@ function encodeIco(entries) {
     const b = i * 16;
     dir[b] = e.size >= 256 ? 0 : e.size;
     dir[b + 1] = e.size >= 256 ? 0 : e.size;
-    dir[b + 2] = 0; // palet
+    dir[b + 2] = 0;
     dir[b + 3] = 0;
     dir.writeUInt16LE(1, b + 4); // planes
     dir.writeUInt16LE(32, b + 6); // bit depth
@@ -204,24 +227,20 @@ mkdirSync(join(WEB, 'public'), { recursive: true });
 
 // favicon.ico: 16/32/48 sekaligus, supaya tajam di tab, bookmark, dan taskbar.
 const icoSizes = [16, 32, 48];
-const ico = encodeIco(
-  icoSizes.map((size) => ({ size, png: encodePng(size, render(size)) })),
+writeFileSync(
+  join(WEB, 'app', 'favicon.ico'),
+  encodeIco(icoSizes.map((size) => ({ size, png: encodePng(size, render(size)) }))),
 );
-writeFileSync(join(WEB, 'app', 'favicon.ico'), ico);
 
 // PNG untuk manifest (Android / PWA) dan apple-touch-icon.
 for (const size of [192, 512]) {
   writeFileSync(join(WEB, 'public', `icon-${size}.png`), encodePng(size, render(size)));
 }
-// Maskable: latar penuh, gambar 72% di tengah agar tidak terpotong lingkaran launcher.
+// Maskable: latar penuh, gambar 72% di tengah agar tidak terpotong bentuk launcher.
 writeFileSync(
   join(WEB, 'public', 'icon-maskable-512.png'),
   encodePng(512, render(512, 0.72, true)),
 );
-writeFileSync(
-  join(WEB, 'public', 'apple-touch-icon.png'),
-  encodePng(180, render(180)),
-);
+writeFileSync(join(WEB, 'public', 'apple-touch-icon.png'), encodePng(180, render(180)));
 
-console.log('[icons] favicon.ico (16/32/48) ->', join(WEB, 'app', 'favicon.ico'));
-console.log('[icons] icon-192.png, icon-512.png, icon-maskable-512.png, apple-touch-icon.png');
+console.log('[icons] helm: favicon.ico (16/32/48) + icon-192/512 + maskable + apple-touch');
