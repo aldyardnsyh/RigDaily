@@ -24,9 +24,10 @@
     "pg:down": "docker compose -f infra/docker/compose.dev.yml down",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
+    "deps:check": "node scripts/check-deps.mjs",
     "audit:text": "node scripts/audit-text-quality.mjs",
     "audit:text:fix": "node scripts/audit-text-quality.mjs --fix",
-    "verify": "npm run typecheck && npm run test && npm run build"
+    "verify": "npm run deps:check && npm run typecheck && npm run test && npm run build"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
