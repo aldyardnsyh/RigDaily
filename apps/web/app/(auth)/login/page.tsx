@@ -176,6 +176,15 @@ function LoginForm() {
       })
       .catch(() => undefined);
 
+    /*
+     * Konteks perangkat dibatasi 6 detik. Tanpa timeout, bila API lambat
+     * (DB dingin, jaringan rig lemot), header macet selamanya di
+     * "mendeteksi..." / "MEMUAT --:--:--" dan pengguna mengira halaman rusak.
+     * Bila timeout: tampilkan fallback yang jujur + tombol muat ulang.
+     */
+    const ctxController = new AbortController();
+    const ctxTimer = setTimeout(() => ctxController.abort(), 6000);
+
     fetch('/api/system/login-info', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((body: { data: LoginInfo }) => {
@@ -183,17 +192,21 @@ function LoginForm() {
       })
       .catch(() => undefined);
 
-    fetch('/api/system/context', { cache: 'no-store' })
+    fetch('/api/system/context', { cache: 'no-store', signal: ctxController.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((body: { data: SystemContext }) => {
         if (!alive) return;
-        offsetMs = body.data.time.epochMs - Date.now();
+        clearTimeout(ctxTimer);
+        offsetMs = body.data.epochMs - Date.now();
         setCtx(body.data);
         setCtxError(null);
       })
       .catch((e: unknown) => {
         if (!alive) return;
-        setCtxError(e instanceof Error ? e.message : 'gagal');
+        clearTimeout(ctxTimer);
+        // AbortError = timeout: bedakan pesannya supaya jelas bukan DB rusak.
+        const aborted = e instanceof Error && e.name === 'AbortError';
+        setCtxError(aborted ? 'timeout' : e instanceof Error ? e.message : 'gagal');
       });
 
     // Jam berjalan mengikuti offset server (bukan jam perangkat).
@@ -206,6 +219,8 @@ function LoginForm() {
     return () => {
       alive = false;
       clearInterval(timer);
+      clearTimeout(ctxTimer);
+      ctxController.abort();
     };
   }, []);
 
@@ -347,10 +362,33 @@ function LoginForm() {
                 background: !ctx ? 'var(--text-muted)' : ctx.connection.database ? 'var(--success)' : 'var(--danger)',
               }}
             />
-            {ipInfo ? ipInfo.ip : 'mendeteksi...'}{' '}
-            <strong>{!ctx ? 'MEMUAT' : ctx.connection.database ? 'TERHUBUNG' : 'DB TERGANGGU'}</strong>
+            {ipInfo ? ipInfo.ip : ctxError ? 'tidak terdeteksi' : 'mendeteksi...'}{' '}
+            <strong>{!ctx ? (ctxError ? 'GAGAL MEMUAT' : 'MEMUAT') : ctx.connection.database ? 'TERHUBUNG' : 'DB TERGANGGU'}</strong>
           </span>
-          <span>{ctx ? `${ctx.time.localTime} ${ctx.time.timeZone.replace('Asia/', 'WIB ')}` : '--:--:--'}</span>
+          <span>{ctx ? `${ctx.time.localTime} ${ctx.time.timeZone.replace('Asia/', 'WIB ')}` : ctxError ? '--:--:--' : '--:--:--'}</span>
+          {ctxError && (
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              title={ctxError === 'timeout' ? 'Server terlalu lama menjawab (lebih dari 6 detik)' : `Gagal memuat info perangkat: ${ctxError}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                height: 28,
+                padding: '0 10px',
+                borderRadius: 'var(--radius-input)',
+                border: '1px solid var(--border-default)',
+                background: 'var(--bg-surface)',
+                color: 'var(--text-secondary)',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Coba lagi
+            </button>
+          )}
         </div>
       </header>
 
@@ -363,11 +401,26 @@ function LoginForm() {
           <div className="auth-terminal">
             <Monitor size={24} aria-hidden />
             <span style={{ minWidth: 0 }}>
-              Terminal: <strong>{ctx ? ctx.terminal : 'mendeteksi perangkat...'}</strong>
+              Terminal:{' '}
+              <strong>
+                {ctx
+                  ? ctx.terminal
+                  : ctxError
+                    ? ctxError === 'timeout'
+                      ? 'server tidak menjawab'
+                      : 'info perangkat gagal dimuat'
+                    : 'mendeteksi perangkat...'}
+              </strong>
               {ctx ? (
                 <span style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', fontWeight: 400 }}>
                   {ctx.device} / {ctx.platform} / {ctx.browser}
                   {ipInfo ? ` / ${ipInfo.network}` : ''}
+                </span>
+              ) : ctxError ? (
+                <span style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', fontWeight: 400 }}>
+                  {ctxError === 'timeout'
+                    ? 'Respons server melebihi 6 detik. Periksa koneksi lalu tekan Coba lagi.'
+                    : 'Klik Coba lagi di kanan atas untuk memuat ulang info perangkat.'}
                 </span>
               ) : null}
             </span>

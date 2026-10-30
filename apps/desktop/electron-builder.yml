@@ -21,7 +21,10 @@ files:
   - "!node_modules/@rigdaily/shared/tsconfig*.json"
 
 # better-sqlite3 adalah modul native: jangan dikemas ke dalam asar, dan WAJIB
-# di-rebuild terhadap ABI Electron (`npx electron-rebuild -f -w better-sqlite3`).
+# di-rebuild terhadap ABI Electron. `npmRebuild: true` membuat builder me-rebuild
+# SETELAH ia menginstall ulang production deps ke staging — rebuild manual
+# sebelumnya selalu tertimpa oleh install ulang ini (itulah kenapa binary yang
+# terkirim selalu ABI Node 127, bukan ABI Electron 31 = 125).
 asar: true
 asarUnpack:
   - "**/node_modules/better-sqlite3/**"
@@ -44,3 +47,13 @@ nsis:
   createStartMenuShortcut: true
   shortcutName: RigDaily Internal
   deleteAppDataOnUninstall: false
+  # Installer resmi: halaman lisensi + pilihan komponen standar NSIS.
+  # File lisensi diambil dari root repo agar satu sumber dengan LICENSE.md.
+  license: ../../LICENSE.md
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
+  # Publisher yang tampil di UAC + Programs and Features.
+  # Tanpa signing berbayar, Windows tetap menampilkan peringatan SmartScreen
+  # "Unknown publisher" — itu wajar untuk rilis internal unsigned.
+  artifactName: "RigDaily-Internal-${version}-${arch}.${ext}"

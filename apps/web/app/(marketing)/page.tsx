@@ -253,7 +253,8 @@ export default function LandingPage() {
               <p className="lp-lede">
                 RigDaily mencatat DDR, time breakdown 24 jam, NPT, biaya, dan personel dalam satu
                 laporan yang ditinjau kantor. Tersedia sebagai aplikasi web untuk kantor dan
-                aplikasi desktop .exe offline-first untuk rig. Setelah disetujui, laporan terkunci
+                aplikasi desktop .exe offline-first untuk rig: data tersimpan lokal di perangkat,
+                tersinkron otomatis saat jaringan kembali. Setelah disetujui, laporan terkunci
                 dan terdistribusi ke penerima yang berhak.
               </p>
 
@@ -414,7 +415,8 @@ export default function LandingPage() {
               <p>
                 Aplikasi desktop di rig menulis ke SQLite lokal dulu, lalu menitipkan kiriman di
                 outbox sebagai perubahan kecil. Saat internet putus, antrean menunggu dengan aman
-                dan terkirim sendiri ketika jaringan kembali.
+                dan terkirim sendiri ketika jaringan kembali. Menutup aplikasi tidak menghilangkan
+                data: saat dibuka lagi, antrean lanjut dari posisi terakhir.
               </p>
               <p>
                 Jika kantor sudah menyetujui laporan yang sama, kiriman rig tidak menimpa hasil

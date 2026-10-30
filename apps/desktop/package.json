@@ -7,6 +7,7 @@
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "rebuild:native": "node scripts/rebuild-native.mjs",
     "start": "npm run build && electron .",
     "dist": "npm run build && electron-builder --win nsis",
     "typecheck": "tsc -p tsconfig.json --noEmit"

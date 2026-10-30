@@ -9,11 +9,11 @@
  *  5. BrowserWindow memuat `RIGDAILY_URL ?? config.serverUrl`; bila server tidak
  *     terjangkau → muat `offline.html` (status offline + Sync Now + daftar draft).
  */
-import { BrowserWindow, Menu, app, type MenuItemConstructorOptions } from 'electron';
+import { BrowserWindow, Menu, app, dialog, type MenuItemConstructorOptions } from 'electron';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { loadConfig } from './config';
+import { loadConfig, saveConfig } from './config';
 import { closeDb, initDb, listLocalReports } from './db';
 import { maybeDailyBackup } from './backup';
 import { registerIpcHandlers } from './ipc';
@@ -25,6 +25,7 @@ const DEV_ICON_HINT = 'build/icon.ico';
 let mainWindow: BrowserWindow | null = null;
 let syncWorker: SyncWorker | null = null;
 let servedOffline = false;
+let loadingOffline = false;
 let quitting = false;
 
 /* ------------------------------------------------------------------ */
@@ -56,19 +57,37 @@ function broadcastState(state: SyncState): void {
 
 async function loadOfflineFallback(reason: string): Promise<void> {
   if (!mainWindow || mainWindow.isDestroyed()) return;
-  servedOffline = true;
-  console.warn(`[main] memuat halaman offline: ${reason}`);
+  // Cegah balapan: did-fail-load dan catch loadURL bisa menyala untuk
+  // kegagalan yang sama. Tanpa penjaga, loadFile kedua membatalkan yang
+  // pertama (ERR_ABORTED) dan layar berakhir blank putih.
+  if (loadingOffline) return;
+  loadingOffline = true;
   try {
-    await mainWindow.loadFile(offlinePagePath(), { query: { reason, drafts: String(listLocalReports().length) } });
-  } catch (err) {
-    console.error('[main] gagal memuat offline.html, memakai data URL minimal:', err);
-    const drafts = listLocalReports().length;
-    const html = `<!doctype html><meta charset="utf-8"><title>RigDaily - Offline</title>
+    servedOffline = false;
+    console.warn(`[main] memuat halaman offline: ${reason}`);
+    // listLocalReports() aman bila DB belum siap (mengembalikan []), jadi
+    // fallback offline tidak pernah crash dan tidak pernah blank putih.
+    let drafts = 0;
+    try {
+      drafts = listLocalReports().length;
+    } catch (err) {
+      console.error('[main] hitung draft gagal (diabaikan):', err);
+    }
+    try {
+      await mainWindow.loadFile(offlinePagePath(), { query: { reason, drafts: String(drafts) } });
+      servedOffline = true;
+    } catch (err) {
+      console.error('[main] gagal memuat offline.html, memakai data URL minimal:', err);
+      const html = `<!doctype html><meta charset="utf-8"><title>RigDaily - Offline</title>
 <body style="font-family:Segoe UI,sans-serif;padding:32px;background:#faf8ff;color:#131b2e">
 <h1 style="font-size:20px">RigDaily Internal - Offline</h1>
 <p>Server kantor tidak terjangkau. ${drafts} draft lokal tersimpan aman di perangkat ini.</p>
 <p style="color:#92400e">${escapeHtmlText(reason)}</p></body>`;
-    await mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+      await mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+      servedOffline = true;
+    }
+  } finally {
+    loadingOffline = false;
   }
 }
 
@@ -135,6 +154,38 @@ function createWindow(): void {
     mainWindow = null;
   });
 
+  /*
+   * KONFIRMASI SEBELUM TUTUP.
+   * Menutup window = menghentikan seluruh aplikasi (sync worker ikut mati,
+   * antrean outbox berhenti dikirim). Tanpa konfirmasi, satu klik X yang
+   * tidak sengaja terasa seperti task-kill: data aman di SQLite, tapi sync
+   * tertunda sampai aplikasi dibuka lagi. Dialog ini mencegah tutup tak sengaja.
+   */
+  win.on('close' as string, (...args: unknown[]) => {
+    const event = args[0] as { preventDefault: () => void };
+    if (quitting) return;
+    event.preventDefault();
+    void dialog
+      .showMessageBox(win, {
+        type: 'question',
+        buttons: ['Tetap buka', 'Tutup aplikasi'],
+        defaultId: 0,
+        cancelId: 0,
+        title: 'Tutup RigDaily Internal?',
+        message: 'Tutup aplikasi RigDaily Internal?',
+        detail:
+          'Sinkronisasi ke server akan berhenti sampai aplikasi dibuka lagi. ' +
+          'Data lokal tetap aman di perangkat ini.',
+      })
+      .then(({ response }) => {
+        if (response !== 1) return;
+        quitting = true;
+        syncWorker?.stop();
+        closeDb();
+        app.quit();
+      });
+  });
+
   const target = serverUrlToLoad();
   win
     .loadURL(target)
@@ -166,6 +217,29 @@ function buildMenu(): void {
           label: 'Export Backup Bundle...',
           click: () => {
             mainWindow?.webContents.executeJavaScript("window.rigdaily?.backup.export()").catch(() => undefined);
+          },
+        },
+        { type: 'separator' },
+        {
+          label: 'Ganti Server...',
+          click: async () => {
+            const current = loadConfig().serverUrl;
+            const { response } = await dialog.showMessageBox(mainWindow!, {
+              type: 'question',
+              buttons: ['Produksi', 'Lokal (localhost:3000)', 'Batal'],
+              defaultId: 0,
+              title: 'Ganti Server',
+              message: 'Pilih server kantor yang dipakai aplikasi ini.',
+              detail: `Aktif saat ini: ${current}\n\nAplikasi akan memuat ulang ke server baru.`,
+            });
+            if (response === 2) return;
+            const next = response === 0 ? 'https://www.rigdaily.web.id' : 'http://localhost:3000';
+            saveConfig({ serverUrl: next });
+            syncWorker?.setServerUrl(next);
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              servedOffline = false;
+              void mainWindow.loadURL(next);
+            }
           },
         },
         { type: 'separator' },
@@ -214,10 +288,14 @@ function bootstrap(): void {
   const userData = app.getPath('userData');
   const config = loadConfig();
 
+  let dbError: string | null = null;
   try {
     initDb();
   } catch (err) {
-    console.error('[main] gagal membuka SQLite lokal:', err);
+    // FATAL tapi JELAS: blank putih lebih buruk daripada dialog error.
+    // Pesan berisi path DB + penyebab asli supaya bisa didiagnosis di mesin rig.
+    dbError = err instanceof Error ? err.message : String(err);
+    console.error('[main] initDb gagal:', dbError);
   }
 
   // Backup harian sebelum window tampil, supaya bundle selalu berisi data terbaru.
@@ -238,6 +316,16 @@ function bootstrap(): void {
 
   buildMenu();
   createWindow();
+
+  // Bila DB gagal dibuka, window tetap tampil dengan halaman error yang jelas
+  // (bukan blank putih), supaya penyebabnya bisa dibaca di mesin rig.
+  if (dbError && mainWindow && !mainWindow.isDestroyed()) {
+    const userDataPath = userData;
+    const msg = dbError;
+    void mainWindow.webContents.executeJavaScript(
+      `document.body.innerHTML = '<div style="font-family:Segoe UI,sans-serif;padding:48px;max-width:640px;margin:0 auto;color:#131b2e"><h1 style="font-size:20px">RigDaily tidak bisa dibuka</h1><p>Database lokal tidak bisa dibuka:</p><pre style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:12px;white-space:pre-wrap;font-size:13px">${JSON.stringify(msg).slice(1, -1)}</pre><p>Solusi cepat: pastikan folder data bisa ditulis, lalu buka ulang aplikasi.<br>Folder data: ${JSON.stringify(userDataPath).slice(1, -1)}</p></div>'`,
+    ).catch(() => undefined);
+  }
 
   syncWorker.start();
 }

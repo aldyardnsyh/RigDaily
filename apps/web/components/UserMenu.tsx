@@ -167,7 +167,8 @@ export function UserMenu({ user }: { user: UserMenuUser | null }) {
         >
           {initials}
         </span>
-        <span className="hidden leading-tight xl:block" style={{ textAlign: 'left' }}>
+        {/* Nama disembunyikan di bawah xl agar tidak bertabrakan dengan badge sync di layar sempit. */}
+        <span className="hidden leading-tight min-[1440px]:block" style={{ textAlign: 'left' }}>
           <span className="block truncate" style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-semibold)' }}>
             {name}
           </span>

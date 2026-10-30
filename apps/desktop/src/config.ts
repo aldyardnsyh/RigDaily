@@ -13,7 +13,9 @@ import { dirname, join } from 'node:path';
 
 import type { DeviceConfig, DeviceConfigPatch } from './types';
 
-const DEFAULT_SERVER_URL = 'http://localhost:3000';
+const DEFAULT_SERVER_URL = 'https://www.rigdaily.web.id';
+/** Nilai default lama (localhost) yang harus dimigrasi ke produksi. */
+const LEGACY_LOCALHOST = 'http://localhost:3000';
 
 let cached: DeviceConfig | null = null;
 
@@ -78,6 +80,13 @@ export function loadConfig(): DeviceConfig {
   try {
     const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
     const normalized = normalize(parsed, fallback);
+    // Migrasi sekali jalan: instalasi lama menyimpan localhost sebagai default.
+    // Tanpa migrasi, aplikasi yang sudah terinstall tidak pernah mencoba server
+    // produksi dan selalu jatuh ke halaman offline.
+    if (normalized.serverUrl === LEGACY_LOCALHOST) {
+      normalized.serverUrl = DEFAULT_SERVER_URL;
+      console.log('[config] migrasi serverUrl localhost -> produksi');
+    }
     cached = normalized;
     // Tulis ulang bila normalisasi menambah field yang belum ada di file lama.
     writeConfigFile(normalized);

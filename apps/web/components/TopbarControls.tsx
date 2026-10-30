@@ -124,6 +124,44 @@ export function ServerClock({ compact = false }: { compact?: boolean }) {
     );
   }
 
+  /*
+   * Di layar sedang (<1280px) tampilkan versi ringkas (jam saja) supaya
+   * tidak berebut ruang dengan pemilih sumur, badge sync, dan menu akun.
+   * Versi lengkap hanya di layar lebar. Keduanya memakai sumber waktu yang sama.
+   */
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1280px)');
+    const apply = () => setWide(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
+  if (!wide) {
+    return (
+      <span
+        className="tnum items-center gap-2 md:inline-flex"
+        title={`Waktu server (${tz}). ${dateLong}, ${shiftLabel}`}
+        style={{
+          display: 'inline-flex',
+          height: 'var(--control-h)',
+          padding: '0 10px',
+          borderRadius: 'var(--radius-input)',
+          background: 'var(--bg-surface-2)',
+          border: '1px solid var(--border-default)',
+          fontSize: 13,
+          fontWeight: 700,
+          whiteSpace: 'nowrap',
+        }}
+        aria-label={`Waktu server ${clock}`}
+      >
+        <Clock size={14} aria-hidden style={{ color: 'var(--text-secondary)', flex: '0 0 auto' }} />
+        {mounted ? clock : '--:--:--'}
+      </span>
+    );
+  }
+
   return (
     <div
       className="hidden items-center gap-2 md:flex"

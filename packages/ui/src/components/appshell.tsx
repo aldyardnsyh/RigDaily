@@ -437,7 +437,13 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="topbar no-print sticky top-0 z-30 flex h-[var(--topbar-h)] items-center gap-3 px-6">
+        {/*
+          Topbar responsif 3 zona (kiri: sumur+jam, tengah: cari, kanan: status+akun).
+          Di layar sempit (<1280px) zona tengah disembunyikan lebih dulu, lalu jam
+          menjadi ringkas, supaya akun + status konflik tidak pernah bertabrakan
+          atau terpotong di viewport laptop kecil maupun mode desktop sempit.
+        */}
+        <header className="topbar no-print sticky top-0 z-30 flex h-[var(--topbar-h)] items-center gap-2 px-4 md:gap-3 md:px-6">
           {wellSwitcher ?? (
             <button
               type="button"
@@ -460,7 +466,7 @@ export function AppShell({
           <label className="sr-only" htmlFor="ops-search">
             Cari log operasi
           </label>
-          <div className="topbar-search hidden lg:flex">
+          <div className="topbar-search hidden xl:flex">
             <Search size={16} aria-hidden />
             <input
             id="ops-search"
@@ -468,7 +474,7 @@ export function AppShell({
             className="h-full w-full bg-transparent text-[14px] outline-none"
             />
           </div>
-          <span className="ml-auto" style={{ display: 'inline-flex', minWidth: 0 }}>
+          <span className="ml-auto hidden min-[420px]:inline-flex" style={{ display: 'inline-flex', minWidth: 0 }}>
             {syncBadge ?? (
               <span className="inline-flex h-9 items-center gap-2 rounded-[var(--radius-badge)] bg-[var(--bg-surface-2)] px-3 text-[12px] font-semibold text-[var(--text-secondary)]">
                 <Cloud size={15} aria-hidden />

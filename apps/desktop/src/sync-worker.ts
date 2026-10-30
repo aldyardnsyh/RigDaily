@@ -149,7 +149,7 @@ function errorMessage(err: unknown): string {
 
 export class SyncWorker {
   private readonly deviceId: string;
-  private readonly serverUrl: string;
+  private serverUrl: string;
   private readonly apiKey: string | null;
   private readonly onState: (s: SyncState) => void;
 
@@ -173,9 +173,15 @@ export class SyncWorker {
     this.onState = opts.onState;
   }
 
+  /** Ganti server target saat runtime (dipakai menu "Ganti Server"). */
+  setServerUrl(url: string): void {
+    this.serverUrl = trimSlash(url);
+    this.online = true;
+    this.lastError = null;
+  }
+
   /** Mulai polling: interval `SYNC_POLL_INTERVAL_MS` + satu siklus segera. */
-  start(): void {
-    if (this.running) return;
+  start(): void {    if (this.running) return;
     this.running = true;
     this.stopped = false;
     void this.runOnce();
@@ -239,6 +245,10 @@ export class SyncWorker {
     let earliestRetryMs: number | null = null;
     let reachedServer = false;
 
+    // Kontrak: cycle TIDAK PERNAH throw. DB belum siap, disk penuh, atau bug
+    // internal semuanya menjadi lastError + emit state, bukan crash main process.
+    // (Sebelumnya listPendingOutbox() melempar saat DB belum init dan
+    // menjatuhkan aplikasi ke unhandledRejection.)
     try {
       const batch = listPendingOutbox(SYNC_BATCH_SIZE);
 
@@ -279,7 +289,23 @@ export class SyncWorker {
       this.lastError = errorMessage(err);
     }
 
-    const state = this.getState();
+    // getState()/emit() juga tidak boleh melempar: bila perhitungan state
+    // sendiri gagal (mis. bug di formatter), kirim state darurat.
+    let state: SyncState;
+    try {
+      state = this.getState();
+    } catch (err) {
+      console.error('[sync] getState gagal, memakai state darurat:', err);
+      state = {
+        online: false,
+        pending: 0,
+        failed: 0,
+        conflicts: 0,
+        lastSyncAt: this.lastSyncAt,
+        lastError: errorMessage(err),
+        indicator: 'red' as const,
+      };
+    }
     this.emit(state);
 
     // Sinyal ditangkap lagi: jadwalkan retry lebih cepat dari interval normal.

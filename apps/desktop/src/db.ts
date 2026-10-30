@@ -129,15 +129,23 @@ export function initDb(dbPath?: string): SqlDatabase {
   const path = dbPath ?? getDbPath();
   mkdirSync(dirname(path), { recursive: true });
 
-  // better-sqlite3: require() mengembalikan fungsi konstruktor.
-  const handle = new Database(path);
-  db = handle as unknown as SqlDatabase;
+  try {
+    // better-sqlite3: require() mengembalikan fungsi konstruktor.
+    const handle = new Database(path);
+    db = handle as unknown as SqlDatabase;
 
-  // WAL: baca tidak memblokir tulis (laporan sering autosave saat shift berjalan).
-  db.pragma('journal_mode = WAL');
-  db.pragma('synchronous = NORMAL');
-  db.pragma('foreign_keys = ON');
-  db.exec(DDL);
+    // WAL: baca tidak memblokir tulis (laporan sering autosave saat shift berjalan).
+    db.pragma('journal_mode = WAL');
+    db.pragma('synchronous = NORMAL');
+    db.pragma('foreign_keys = ON');
+    db.exec(DDL);
+  } catch (err) {
+    db = null;
+    // Jangan telan: bootstrap() menampilkan dialog fatal berisi pesan ini.
+    // Tanpa ini, kegagalan init hanya jadi blank putih yang tidak bisa didiagnosis.
+    const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+    throw new Error(`Gagal membuka database lokal di ${path}. ${detail}`);
+  }
   return db;
 }
 
@@ -273,6 +281,7 @@ function rowToOutbox(row: SqlRow): OutboxItem {
 /* ------------------------------------------------------------------ */
 
 export function listLocalReports(): LocalReport[] {
+  if (!db) return [];
   const rows = getDb()
     .prepare(
       `SELECT * FROM reports
