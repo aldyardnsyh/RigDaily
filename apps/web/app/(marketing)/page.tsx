@@ -1,6 +1,6 @@
 ﻿import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ROLES, ROLE_IDS } from '@rigdaily/shared';
+import { ROLES, ROLE_IDS, COPYRIGHT_NOTICE, VENDOR_NAME } from '@rigdaily/shared';
 import { BrandMark } from '@rigdaily/ui';
 import './landing.css';
 
@@ -209,7 +209,7 @@ export default function LandingPage() {
               'Pelaporan operasi sumur harian: DDR, time breakdown 24 jam, NPT, biaya, personel, dan sinkronisasi rig ke kantor.',
             author: {
               '@type': 'Organization',
-              name: 'PogungSoftwareHouseTeam',
+              name: VENDOR_NAME,
             },
           }),
         }}
@@ -511,7 +511,7 @@ export default function LandingPage() {
           </nav>
 
           <p className="lp-copyright">
-            Hak cipta (c) 2026 PogungSoftwareHouseTeam (PSHT). Seluruh hak dilindungi.
+            {COPYRIGHT_NOTICE}
           </p>
         </div>
       </footer>

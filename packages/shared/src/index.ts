@@ -9,3 +9,4 @@ export * from './schemas';
 export * from './sync';
 export * from './labels';
 export * from './demo';
+export * from './brand';

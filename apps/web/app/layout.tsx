@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { VENDOR_NAME, VENDOR_SHORT } from '@rigdaily/shared';
 import './globals.css';
 import { ToasterClient } from '../components/ToasterClient';
 
@@ -21,9 +22,9 @@ export const metadata: Metadata = {
   description:
     'RigDaily mencatat DDR harian, time breakdown 24 jam, NPT, biaya, personel, dan kondisi sumur di rig, lalu menyinkronkannya ke kantor untuk disetujui dan didistribusikan.',
   applicationName: 'RigDaily',
-  authors: [{ name: 'PogungSoftwareHouseTeam' }],
-  creator: 'PogungSoftwareHouseTeam',
-  publisher: 'PogungSoftwareHouseTeam',
+  authors: [{ name: `${VENDOR_NAME} (${VENDOR_SHORT})` }],
+  creator: VENDOR_NAME,
+  publisher: VENDOR_NAME,
   keywords: [
     'daily drilling report',
     'DDR',

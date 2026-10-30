@@ -2,14 +2,15 @@
   "name": "@rigdaily/database",
   "version": "0.1.0",
   "private": true,
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./schema": "./src/schema/index.ts",
-    "./sqlite": "./src/sqlite/index.ts"
+    ".": "./dist/index.js",
+    "./schema": "./dist/schema/index.js",
+    "./sqlite": "./dist/sqlite/index.js"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrate.ts",
     "db:seed": "tsx src/seed.ts"

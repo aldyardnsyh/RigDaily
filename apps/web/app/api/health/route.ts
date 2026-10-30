@@ -14,6 +14,7 @@
 import { sql } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { db, isPglite } from '@rigdaily/database';
+import { VENDOR_NAME } from '@rigdaily/shared';
 import { ok } from '@/lib/api-response';
 
 export const runtime = 'nodejs';
@@ -23,9 +24,9 @@ const VERSION = '0.1.0';
 
 /** Identitas build, diisi saat build dari env. Nilai default = build lokal. */
 const BUILD_IDENTITY = {
-  vendor: 'PogungSoftwareHouseTeam',
+  vendor: VENDOR_NAME,
   edition: process.env.APP_EDITION ?? 'community',
-  commit: process.env.BUILD_COMMIT ?? 'local',
+  commit: process.env.BUILD_COMMIT ?? process.env.VERCEL_GIT_COMMIT_SHA ?? 'local',
   builtAt: process.env.BUILD_TIME ?? new Date().toISOString(),
 } as const;
 

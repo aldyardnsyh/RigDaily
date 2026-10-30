@@ -197,7 +197,7 @@ function LoginForm() {
       .then((body: { data: SystemContext }) => {
         if (!alive) return;
         clearTimeout(ctxTimer);
-        offsetMs = body.data.epochMs - Date.now();
+        offsetMs = body.data.time.epochMs - Date.now();
         setCtx(body.data);
         setCtxError(null);
       })
