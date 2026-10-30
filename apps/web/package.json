@@ -4,14 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "node dev.js",
-    /*
-     * Build packages dulu SEBELUM next build.
-     *
-     * `dist/` tidak ikut ke Git (hasil kompilasi lokal), dan Vercel tidak
-     * menjalankannya otomatis. Tanpa baris ini, `@rigdaily/shared` (yang
-     * `main`-nya menunjuk `./dist/index.js`) tidak ketemu dan build gagal
-     * dengan "Module not found: Can't resolve '@rigdaily/shared'".
-     */
     "build": "npm run build -w @rigdaily/shared -w @rigdaily/ui -w @rigdaily/database && next build",
     "start": "next start"
   },
