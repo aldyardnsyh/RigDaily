@@ -2,8 +2,8 @@ Hak Cipta (c) 2026 PogungSoftwareHouseTeam (PSHT). Seluruh hak dilindungi.
 
 Perangkat lunak ini adalah milik eksklusif PogungSoftwareHouseTeam (PSHT).
 Dilarang memperbanyak, memodifikasi, mendistribusikan, menjual kembali,
-atau membuat karya turunan dari perangkat lunak ini — baik sebagian maupun
-seluruhnya, dalam bentuk kode sumber maupun biner — tanpa izin tertulis
+atau membuat karya turunan dari perangkat lunak ini - baik sebagian maupun
+seluruhnya, dalam bentuk kode sumber maupun biner - tanpa izin tertulis
 dari PSHT.
 
 Penggunaan yang diizinkan:
